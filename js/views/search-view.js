@@ -1,19 +1,24 @@
 import { searchTMDB } from '../services/tmdb-service.js';
 import { searchGames } from '../services/rawg-service.js';
 import { searchBooks } from '../services/books-service.js';
+import { getMediaByTag } from '../supabase-client.js';
 import { BOOK_ICON_EMOJI } from '../config.js';
 
 export async function renderSearchView(container) {
+    const lancamentos = await getMediaByTag('lancamentos');
+    const paraVoce = await getMediaByTag('para_voce');
+    const aguardados = await getMediaByTag('aguardados');
+
     container.innerHTML = `
         <div class="section">
-            <!-- Barra de Busca Pill (Figma exact match) -->
+            <!-- Barra de Busca Pill -->
             <div class="search-input-wrapper">
                 <span class="search-input-icon">🔍</span>
                 <input type="text" id="search-input" class="search-pill-input" placeholder="Buscar por filmes, séries, jogos, livros...">
                 <span class="search-filter-icon" id="filter-btn">≡</span>
             </div>
 
-            <!-- Seção de Categorias Grid 2x2 (Figma exact match) -->
+            <!-- Seção de Categorias Grid 2x2 -->
             <div style="margin-bottom: 20px;">
                 <h3 class="section-title" style="margin-bottom: 12px;">Categorias</h3>
                 <div class="category-grid">
@@ -36,41 +41,42 @@ export async function renderSearchView(container) {
                 </div>
             </div>
 
-            <!-- Seção Lançamentos -->
+            <!-- Seção Lançamentos (100% Dinâmico do SQLite) -->
             <div class="section" style="padding: 0 0 16px 0;">
                 <div class="section-header">
                     <h3 class="section-title">Lançamentos</h3>
                     <span class="see-more-btn">Ver mais</span>
                 </div>
                 <div class="horizontal-scroll" id="lancamentos-scroll">
-                    <div class="poster-card"><img src="https://image.tmdb.org/t/p/w500/1XS1oqL89opfnbLl8WnZY1eeYw0.jpg" class="poster-img"></div>
-                    <div class="poster-card"><img src="https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg" class="poster-img"></div>
-                    <div class="poster-card"><img src="https://image.tmdb.org/t/p/w500/zt5uu278ed6Z4oDUpYq0KjZq09s.jpg" class="poster-img"></div>
+                    ${lancamentos.length > 0 ? lancamentos.map(item => `
+                        <div class="poster-card" data-id="${item.id}"><img src="${item.poster || 'https://via.placeholder.com/300x450?text=Capa'}" class="poster-img"></div>
+                    `).join('') : '<div style="color: var(--text-muted); font-size: 0.85rem;">Nenhum lançamento no momento.</div>'}
                 </div>
             </div>
 
-            <!-- Seção Para Você -->
+            <!-- Seção Para Você (100% Dinâmico do SQLite) -->
             <div class="section" style="padding: 0 0 16px 0;">
                 <div class="section-header">
                     <h3 class="section-title">Para você</h3>
                     <span class="see-more-btn">Ver mais</span>
                 </div>
                 <div class="horizontal-scroll" id="para-voce-scroll">
-                    <div class="poster-card"><img src="https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500" class="poster-img"></div>
-                    <div class="poster-card"><img src="https://covers.openlibrary.org/b/id/8311916-M.jpg" class="poster-img"></div>
-                    <div class="poster-card"><img src="https://image.tmdb.org/t/p/w500/1XS1oqL89opfnbLl8WnZY1eeYw0.jpg" class="poster-img"></div>
+                    ${paraVoce.length > 0 ? paraVoce.map(item => `
+                        <div class="poster-card" data-id="${item.id}"><img src="${item.poster || 'https://via.placeholder.com/300x450?text=Capa'}" class="poster-img"></div>
+                    `).join('') : '<div style="color: var(--text-muted); font-size: 0.85rem;">Nenhuma recomendação no momento.</div>'}
                 </div>
             </div>
 
-            <!-- Seção Mais Aguardados -->
+            <!-- Seção Mais Aguardados (100% Dinâmico do SQLite) -->
             <div class="section" style="padding: 0 0 16px 0;">
                 <div class="section-header">
                     <h3 class="section-title">Mais aguardados</h3>
                     <span class="see-more-btn">Ver mais</span>
                 </div>
                 <div class="horizontal-scroll" id="aguardados-scroll">
-                    <div class="poster-card"><img src="https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg" class="poster-img"></div>
-                    <div class="poster-card"><img src="https://image.tmdb.org/t/p/w500/zt5uu278ed6Z4oDUpYq0KjZq09s.jpg" class="poster-img"></div>
+                    ${aguardados.length > 0 ? aguardados.map(item => `
+                        <div class="poster-card" data-id="${item.id}"><img src="${item.poster || 'https://via.placeholder.com/300x450?text=Capa'}" class="poster-img"></div>
+                    `).join('') : '<div style="color: var(--text-muted); font-size: 0.85rem;">Nenhum título aguardado.</div>'}
                 </div>
             </div>
 
