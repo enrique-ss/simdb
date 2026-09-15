@@ -20,7 +20,7 @@ export async function renderProfileView(container) {
             <!-- 1. Cover Header (Sem Placeholders Fictícios) -->
             <div class="profile-cover-box">
                 ${coverHtml}
-                <div style="position: absolute; top: 14px; right: 16px; color: white; font-size: 1.3rem; cursor: pointer;">•••</div>
+                <div id="profile-dots-menu-btn" style="position: absolute; top: 14px; right: 16px; color: white; font-size: 1.3rem; cursor: pointer; padding: 6px; z-index: 10;">•••</div>
                 ${avatarHtml}
             </div>
 
@@ -117,6 +117,13 @@ export async function renderProfileView(container) {
 
     const hallFamaBtn = container.querySelector('#hall-fama-trigger-btn');
     if (hallFamaBtn) hallFamaBtn.addEventListener('click', () => window.navigateTo('hall-fama'));
+
+    const dotsMenuBtn = container.querySelector('#profile-dots-menu-btn');
+    if (dotsMenuBtn) {
+        dotsMenuBtn.addEventListener('click', () => {
+            if (window.navigateTo) window.navigateTo('settings');
+        });
+    }
 
     container.querySelectorAll('.prof-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {

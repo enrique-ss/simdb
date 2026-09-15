@@ -46,54 +46,161 @@ document.addEventListener('DOMContentLoaded', () => {
         language: renderLanguageView,
         'continuar-full': renderFullContinuarView,
         notifications: async (container) => {
+            const user = getSessionUser();
+            let notifs = [];
+            try {
+                if (user) {
+                    const res = await fetch(`/api/notifications?user_id=${user.id}`);
+                    notifs = await res.json();
+                }
+            } catch (err) {
+                console.error('Erro ao carregar notificações:', err);
+            }
+
             container.innerHTML = `
-                <div class="section">
-                    <h3 class="section-title" style="margin-bottom: 16px;">Notificações</h3>
-                    <p style="color: var(--text-secondary); text-align: center; padding: 40px 0;">Nenhuma notificação nova no momento.</p>
+                <div class="section" style="padding: 16px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <h3 style="font-weight: 800; font-size: 1.2rem; color: white;">Notificações</h3>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        ${notifs.length > 0 ? notifs.map(n => `
+                            <div style="background: #14141C; padding: 14px; border-radius: 12px; border: 1px solid #242430; display: flex; align-items: flex-start; gap: 12px;">
+                                <div style="font-size: 1.4rem;">${n.type === 'friend_request' ? '🤝' : n.type === 'chat' ? '💬' : '🔔'}</div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 700; color: white; font-size: 0.88rem;">${n.title}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;">${n.content}</div>
+                                </div>
+                            </div>
+                        `).join('') : '<p style="color: var(--text-secondary); text-align: center; padding: 60px 0; font-size: 0.88rem;">Nenhuma notificação nova no momento.</p>'}
+                    </div>
                 </div>
             `;
         },
         settings: async (container) => {
             const user = getSessionUser();
             container.innerHTML = `
-                <div class="section">
-                    <h3 class="section-title" style="margin-bottom: 16px;">Configurações</h3>
-                    <div style="background: var(--bg-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 16px; display: flex; flex-direction: column; gap: 12px;">
-                        <div style="font-weight: 700;">Conta: @${user ? user.username : ''}</div>
-                        
-                        <button id="opt-blocked" style="background: none; border: none; color: white; text-align: left; padding: 8px 0; font-size: 0.9rem; cursor: pointer; border-bottom: 1px solid var(--border-color);">
-                            🚫 Contas Bloqueadas
-                        </button>
-                        <button id="opt-language" style="background: none; border: none; color: white; text-align: left; padding: 8px 0; font-size: 0.9rem; cursor: pointer; border-bottom: 1px solid var(--border-color);">
-                            🌐 Idioma e Região
-                        </button>
-                        <button id="opt-import" style="background: none; border: none; color: white; text-align: left; padding: 8px 0; font-size: 0.9rem; cursor: pointer;">
-                            📦 Importar e Exportar Dados
-                        </button>
+                <div class="section" style="padding: 16px;">
+                    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px;">
+                        <button id="settings-back-btn" style="background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer;">‹</button>
+                        <h3 style="font-weight: 800; font-size: 1.2rem; color: white;">Configurações</h3>
                     </div>
-                    <button id="logout-btn" style="width: 100%; background: var(--heart-red); color: white; border: none; padding: 12px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer;">
-                        🚪 Sair da Conta
+
+                    <!-- Banner Apoie o Kindred (Configurações.pdf) -->
+                    <div class="apoie-banner-card" id="settings-apoie-card" style="margin: 0 0 24px 0;">
+                        <div class="apoie-banner-left">
+                            <div class="apoie-k-icon">K</div>
+                            <div>
+                                <div class="apoie-title">Apoie o Kindred</div>
+                                <div class="apoie-sub">Assista um anúncio para contribuir, nos ajudando a manter o aplicativo ativo e funcionando.</div>
+                            </div>
+                        </div>
+                        <div style="color: var(--text-secondary); font-size: 1.2rem;">›</div>
+                    </div>
+
+                    <!-- Grupo: Perfil -->
+                    <div style="margin-bottom: 24px;">
+                        <h4 style="font-size: 0.85rem; font-weight: 700; color: white; margin-bottom: 10px;">Perfil</h4>
+                        <div style="background: #14141C; border-radius: 14px; border: 1px solid #242432; overflow: hidden;">
+                            <div id="opt-color" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432; cursor: pointer;">
+                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
+                                    <span>🎨</span> Cor do perfil
+                                </div>
+                                <span style="color: var(--text-muted);">›</span>
+                            </div>
+                            <div id="opt-blocked" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432; cursor: pointer;">
+                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
+                                    <span>👤</span> Contas bloqueadas
+                                </div>
+                                <span style="color: var(--text-muted);">›</span>
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432;">
+                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
+                                    <span>🛍️</span> Conta privada
+                                </div>
+                                <input type="checkbox" style="accent-color: var(--accent-purple); width: 18px; height: 18px; cursor: pointer;">
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;">
+                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
+                                    <span>📊</span> Estatísticas privadas
+                                </div>
+                                <input type="checkbox" style="accent-color: var(--accent-purple); width: 18px; height: 18px; cursor: pointer;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Grupo: Personalização -->
+                    <div style="margin-bottom: 28px;">
+                        <h4 style="font-size: 0.85rem; font-weight: 700; color: white; margin-bottom: 10px;">Personalização</h4>
+                        <div style="background: #14141C; border-radius: 14px; border: 1px solid #242432; overflow: hidden;">
+                            <div id="opt-banner-home" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432; cursor: pointer;">
+                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
+                                    <span>🖼️</span> Banner da página inicial
+                                </div>
+                                <span style="color: var(--text-muted);">›</span>
+                            </div>
+                            <div id="opt-banner-stats" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432; cursor: pointer;">
+                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
+                                    <span>📊</span> Banner da página de estatísticas
+                                </div>
+                                <span style="color: var(--text-muted);">›</span>
+                            </div>
+                            <div id="opt-filter" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432; cursor: pointer;">
+                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
+                                    <span>🌪️</span> Filtro de mídia
+                                </div>
+                                <span style="color: var(--text-muted);">›</span>
+                            </div>
+                            <div id="opt-language" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432; cursor: pointer;">
+                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
+                                    <span>🌐</span> Idioma e região
+                                </div>
+                                <span style="color: var(--text-muted);">›</span>
+                            </div>
+                            <div id="opt-notifications" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer;">
+                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
+                                    <span>🔔</span> Notificações
+                                </div>
+                                <span style="color: var(--text-muted);">›</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="logout-btn" style="width: 100%; background: #2A1F26; color: var(--heart-red); border: 1px solid rgba(255,75,110,0.3); padding: 14px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer;">
+                        Sair da Conta
                     </button>
                 </div>
             `;
 
+            container.querySelector('#settings-back-btn').addEventListener('click', () => navigateBack());
+            const apoieCard = container.querySelector('#settings-apoie-card');
+            if (apoieCard) apoieCard.addEventListener('click', () => navigateTo('apoie'));
+
             container.querySelector('#opt-blocked').addEventListener('click', () => navigateTo('blocked'));
             container.querySelector('#opt-language').addEventListener('click', () => navigateTo('language'));
-            container.querySelector('#opt-import').addEventListener('click', () => navigateTo('import-export'));
 
             container.querySelector('#logout-btn').addEventListener('click', () => {
                 localStorage.removeItem('kindred_session_user');
+                localStorage.removeItem('kindred_token');
                 window.location.reload();
             });
         }
     };
+
+    let socket = null;
+    const initialUser = getSessionUser();
+    if (initialUser && typeof io !== 'undefined') {
+        socket = io();
+        socket.emit('join', initialUser.id);
+        window.kindredSocket = socket;
+    }
 
     async function navigateTo(viewName, isBack = false) {
         const currentUser = getSessionUser();
 
         if (!currentUser) {
             bottomNav.style.display = 'none';
-            renderAuthView(viewContainer, 'register');
+            renderAuthView(viewContainer, 'login');
             return;
         }
 

@@ -1,24 +1,34 @@
-export function renderAuthView(container, initialScreen = 'register') {
-    let currentScreen = initialScreen; // 'register' ou 'login'
+export function renderAuthView(container, initialScreen = 'login') {
+    let currentScreen = initialScreen; // 'login' (padrão) ou 'register'
 
     function renderScreen() {
         if (currentScreen === 'register') {
             container.innerHTML = `
                 <div class="section" style="min-height: 90vh; display: flex; flex-direction: column; justify-content: center; padding: 24px;">
-                    <!-- Logo KINDRED (Figma exact match) -->
-                    <div style="text-align: center; margin-bottom: 32px;">
-                        <h1 style="font-size: 2.8rem; font-weight: 900; letter-spacing: -1.5px; color: #E2D5FC; text-transform: uppercase;">KINDRED</h1>
+                    <!-- Logo KINDRED (Figma exact match Cadastro.pdf) -->
+                    <div style="text-align: center; margin-bottom: 28px;">
+                        <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 3.2rem; font-weight: 900; letter-spacing: -1px; color: #E5D4ED; text-transform: uppercase;">KINDRED</h1>
                     </div>
 
-                    <!-- Formulário de Cadastro (Figma exact match) -->
+                    <!-- Formulário de Cadastro -->
                     <div style="display: flex; flex-direction: column; gap: 14px;">
                         <div>
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
-                                NOME DE USUÁRIO
+                                NOME DE EXIBIÇÃO
                             </label>
                             <div style="position: relative;">
                                 <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">👤</span>
-                                <input type="text" id="reg-username" class="search-pill-input" placeholder="Username" style="padding-left: 42px;">
+                                <input type="text" id="reg-display-name" class="search-pill-input" placeholder="Seu nome (ex: Enrique Silva)" style="padding-left: 42px;">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                                NOME DE USUÁRIO (@HANDLE)
+                            </label>
+                            <div style="position: relative;">
+                                <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">@</span>
+                                <input type="text" id="reg-username" class="search-pill-input" placeholder="seu_username" style="padding-left: 42px;">
                             </div>
                         </div>
 
@@ -39,7 +49,6 @@ export function renderAuthView(container, initialScreen = 'register') {
                             <div style="position: relative;">
                                 <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">🔒</span>
                                 <input type="password" id="reg-password" class="search-pill-input" placeholder="Digite sua senha" style="padding-left: 42px; padding-right: 42px;">
-                                <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer;">👁</span>
                             </div>
                             <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; display: block;">Senha deve conter no mínimo 8 caracteres</span>
                         </div>
@@ -51,7 +60,6 @@ export function renderAuthView(container, initialScreen = 'register') {
                             <div style="position: relative;">
                                 <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">🔒</span>
                                 <input type="password" id="reg-password-confirm" class="search-pill-input" placeholder="Digite sua senha" style="padding-left: 42px; padding-right: 42px;">
-                                <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer;">👁</span>
                             </div>
                             <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; display: block;">Digite sua senha para confirmar</span>
                         </div>
@@ -73,19 +81,19 @@ export function renderAuthView(container, initialScreen = 'register') {
                 <div class="section" style="min-height: 90vh; display: flex; flex-direction: column; justify-content: center; padding: 24px;">
                     <!-- Logo KINDRED -->
                     <div style="text-align: center; margin-bottom: 24px;">
-                        <h1 style="font-size: 2.8rem; font-weight: 900; letter-spacing: -1.5px; color: #E2D5FC; text-transform: uppercase;">KINDRED</h1>
+                        <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 3.2rem; font-weight: 900; letter-spacing: -1px; color: #E5D4ED; text-transform: uppercase;">KINDRED</h1>
                         <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 6px;">Catalogue, descubra e compartilhe suas mídias favoritas.</p>
                     </div>
 
-                    <!-- Formulário de Login (Figma exact match) -->
+                    <!-- Formulário de Login -->
                     <div style="display: flex; flex-direction: column; gap: 14px;">
                         <div>
                             <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
-                                E-MAIL OU USUÁRIO
+                                E-MAIL OU USUÁRIO (@HANDLE)
                             </label>
                             <div style="position: relative;">
                                 <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">✉️</span>
-                                <input type="text" id="login-identifier" class="search-pill-input" placeholder="Digite seu e-mail ou usuário" style="padding-left: 42px;">
+                                <input type="text" id="login-identifier" class="search-pill-input" placeholder="Digite seu e-mail ou @usuario" style="padding-left: 42px;">
                             </div>
                         </div>
 
@@ -96,7 +104,6 @@ export function renderAuthView(container, initialScreen = 'register') {
                             <div style="position: relative;">
                                 <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">🔒</span>
                                 <input type="password" id="login-password" class="search-pill-input" placeholder="Digite sua senha" style="padding-left: 42px; padding-right: 42px;">
-                                <span style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); cursor: pointer;">👁</span>
                             </div>
                         </div>
 
@@ -109,10 +116,6 @@ export function renderAuthView(container, initialScreen = 'register') {
                         <button id="google-login-btn" style="background: #22222E; color: white; border: 1px solid var(--border-color); padding: 12px; border-radius: var(--radius-md); font-weight: 600; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                             <span>🌐</span> Continuar com Google
                         </button>
-
-                        <div style="text-align: center; font-size: 0.78rem; color: var(--text-muted); cursor: pointer;">
-                            Esqueceu sua senha?
-                        </div>
 
                         <div style="text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 12px;">
                             Ainda não tem uma conta? <span id="switch-to-reg" style="color: #F2C7E5; font-weight: 700; cursor: pointer;">Criar conta</span>
@@ -141,6 +144,7 @@ export function renderAuthView(container, initialScreen = 'register') {
 
             if (registerBtn) {
                 registerBtn.addEventListener('click', async () => {
+                    const displayName = container.querySelector('#reg-display-name').value.trim();
                     const username = container.querySelector('#reg-username').value.trim();
                     const email = container.querySelector('#reg-email').value.trim();
                     const password = container.querySelector('#reg-password').value.trim();
@@ -148,7 +152,7 @@ export function renderAuthView(container, initialScreen = 'register') {
 
                     if (!username || !email || !password) {
                         errorMsg.style.display = 'block';
-                        errorMsg.innerText = "Preencha todos os campos.";
+                        errorMsg.innerText = "Preencha o nome de usuário, e-mail e senha.";
                         return;
                     }
 
@@ -162,11 +166,12 @@ export function renderAuthView(container, initialScreen = 'register') {
                         const res = await fetch('/api/auth/register', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ username, email, password })
+                            body: JSON.stringify({ display_name: displayName, username, email, password })
                         });
                         const data = await res.json();
                         if (!res.ok) throw new Error(data.error || "Erro no cadastro.");
 
+                        if (data.token) localStorage.setItem('kindred_token', data.token);
                         localStorage.setItem('kindred_session_user', JSON.stringify(data.user));
                         window.location.reload();
                     } catch (err) {
@@ -206,6 +211,7 @@ export function renderAuthView(container, initialScreen = 'register') {
                         const data = await res.json();
                         if (!res.ok) throw new Error(data.error || "Login falhou.");
 
+                        if (data.token) localStorage.setItem('kindred_token', data.token);
                         localStorage.setItem('kindred_session_user', JSON.stringify(data.user));
                         window.location.reload();
                     } catch (err) {

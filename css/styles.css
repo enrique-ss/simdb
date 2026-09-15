@@ -29,13 +29,13 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-body {
+html, body {
     background-color: var(--bg-primary);
     color: var(--text-primary);
     font-family: var(--font-main);
     line-height: 1.4;
-    padding-bottom: 75px;
-    min-height: 100vh;
+    min-height: 100%;
+    overflow-y: auto;
     overflow-x: hidden;
 }
 
@@ -47,6 +47,7 @@ body {
     display: flex;
     flex-direction: column;
     position: relative;
+    padding-bottom: 85px; /* Espaço para não cortar pelo rodapé fixo */
     box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
 }
 

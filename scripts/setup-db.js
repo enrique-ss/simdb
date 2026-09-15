@@ -8,7 +8,9 @@ console.log('🔄 Executando npm run setup: criando banco de dados SQLite ZERADO
 const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA foreign_keys = OFF;');
 
-// Limpa tabelas existentes se houver
+db.exec('DROP TABLE IF EXISTS messages;');
+db.exec('DROP TABLE IF EXISTS notifications;');
+db.exec('DROP TABLE IF EXISTS activities;');
 db.exec('DROP TABLE IF EXISTS user_media_progress;');
 db.exec('DROP TABLE IF EXISTS reviews_ratings;');
 db.exec('DROP TABLE IF EXISTS user_relationships;');
@@ -105,8 +107,23 @@ db.exec(`
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
         friend_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-        status TEXT DEFAULT 'accepted',
-        affinity_percentage REAL DEFAULT 85.0
+        status TEXT DEFAULT 'pending',
+        affinity_percentage REAL DEFAULT 85.0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+`);
+
+// Tabela de Atividades (Feed Social)
+db.exec(`
+    CREATE TABLE activities (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+        activity_type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        media_id TEXT,
+        media_poster TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 `);
 
@@ -146,6 +163,31 @@ db.exec(`
         media_title TEXT,
         media_poster TEXT,
         media_type TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+`);
+
+// Tabela de Mensagens de Chat (Direct Messages & WebSockets)
+db.exec(`
+    CREATE TABLE messages (
+        id TEXT PRIMARY KEY,
+        sender_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+        receiver_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+        content TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+`);
+
+// Tabela de Notificações em Tempo Real
+db.exec(`
+    CREATE TABLE notifications (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        content TEXT DEFAULT '',
+        is_read INTEGER DEFAULT 0,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 `);
