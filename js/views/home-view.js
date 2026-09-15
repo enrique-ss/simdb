@@ -27,7 +27,7 @@ export async function renderHomeView(container) {
                     <span class="filter-icon-btn">≡</span>
                     <span>Continuar</span>
                 </h3>
-                <span class="see-more-btn">Ver mais</span>
+                <span class="see-more-btn" id="see-more-continuar">Ver mais</span>
             </div>
             <div class="horizontal-scroll">
                 ${progressList.length > 0 ? progressList.map(item => {
@@ -61,7 +61,7 @@ export async function renderHomeView(container) {
                 <h3 class="section-title">
                     <span>Novos episódios</span>
                 </h3>
-                <span class="see-more-btn">Ver mais</span>
+                <span class="see-more-btn" id="see-more-episodes">Ver mais</span>
             </div>
             <div class="horizontal-scroll">
                 ${newEpisodes.length > 0 ? newEpisodes.map(item => `
@@ -87,7 +87,7 @@ export async function renderHomeView(container) {
                 <h3 class="section-title">
                     <span>Atividade de Amigos</span>
                 </h3>
-                <span class="see-more-btn">Ver mais</span>
+                <span class="see-more-btn" id="see-more-amigos">Ver mais</span>
             </div>
             <div class="horizontal-scroll">
                 ${activities.length > 0 ? activities.map(act => {
@@ -132,4 +132,27 @@ export async function renderHomeView(container) {
             window.navigateTo('apoie');
         });
     }
+
+    const seeMoreContinuar = container.querySelector('#see-more-continuar');
+    if (seeMoreContinuar) seeMoreContinuar.addEventListener('click', () => window.navigateTo('continuar-full'));
+
+    const seeMoreEpisodes = container.querySelector('#see-more-episodes');
+    if (seeMoreEpisodes) seeMoreEpisodes.addEventListener('click', () => window.navigateTo('continuar-full'));
+
+    const seeMoreAmigos = container.querySelector('#see-more-amigos');
+    if (seeMoreAmigos) seeMoreAmigos.addEventListener('click', () => window.navigateTo('amigos'));
+
+    container.querySelectorAll('.poster-card[data-id]').forEach((card, idx) => {
+        card.addEventListener('click', async () => {
+            const item = progressList[idx];
+            if (item) {
+                await fetch('/api/progress/advance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: item.id })
+                });
+                renderHomeView(container);
+            }
+        });
+    });
 }

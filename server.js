@@ -84,7 +84,7 @@ app.post('/api/auth/login', (req, res) => {
 // ENDPOINTS DINÂMICOS DO BANCO DE DADOS
 // -------------------------------------------------------------
 
-// Perfil do Usuário por ID
+// Perfil do Usuário por ID com Estatísticas Calculadas Dinamicamente
 app.get('/api/profile', (req, res) => {
     if (APP_MODE !== 'local') return res.status(400).json({ error: "Servidor em modo Supabase." });
     try {
@@ -95,7 +95,20 @@ app.get('/api/profile', (req, res) => {
         } else {
             user = db.prepare('SELECT * FROM profiles LIMIT 1').get();
         }
-        res.json(user || null);
+        if (!user) return res.json(null);
+
+        // Calcular estatísticas dinamicamente do banco de dados
+        const seriesCount = db.prepare(`SELECT COUNT(DISTINCT media_id) as c FROM user_media_progress WHERE user_id = ? AND media_type = 'series'`).get(user.id).c;
+        const moviesCount = db.prepare(`SELECT COUNT(DISTINCT media_id) as c FROM user_media_progress WHERE user_id = ? AND media_type = 'movie'`).get(user.id).c;
+        const gamesCount = db.prepare(`SELECT COUNT(DISTINCT media_id) as c FROM user_media_progress WHERE user_id = ? AND media_type = 'game'`).get(user.id).c;
+        const booksCount = db.prepare(`SELECT COUNT(DISTINCT media_id) as c FROM user_media_progress WHERE user_id = ? AND media_type = 'book'`).get(user.id).c;
+
+        user.series_count = seriesCount;
+        user.movies_count = moviesCount;
+        user.games_count = gamesCount;
+        user.works_count = booksCount;
+
+        res.json(user);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -141,6 +154,47 @@ app.get('/api/progress', (req, res) => {
     }
 });
 
+// Adicionar Mídia ao Progresso/Continuar
+app.post('/api/progress/add', (req, res) => {
+    if (APP_MODE !== 'local') return res.status(400).json({ error: "Servidor em modo Supabase." });
+    try {
+        const { user_id, media_id, title, media_type, poster, total_episodes, total_chapters } = req.body;
+        if (!user_id || !media_id || !title) {
+            return res.status(400).json({ error: "Dados de mídia ou usuário incompletos." });
+        }
+
+        // Garantir que a mídia existe no catálogo media_items
+        const mediaCheck = db.prepare('SELECT id FROM media_items WHERE id = ?').get(media_id);
+        if (!mediaCheck) {
+            db.prepare(`
+                INSERT INTO media_items (id, media_type, title, poster)
+                VALUES (?, ?, ?, ?)
+            `).run(media_id, media_type || 'series', title, poster || '');
+        }
+
+        // Verificar se já existe progresso para esse usuário e mídia
+        const existing = db.prepare('SELECT id FROM user_media_progress WHERE user_id = ? AND media_id = ?').get(user_id, media_id);
+        if (existing) {
+            db.prepare(`
+                UPDATE user_media_progress 
+                SET last_updated = CURRENT_TIMESTAMP
+                WHERE id = ?
+            `).run(existing.id);
+            return res.json({ success: true, id: existing.id });
+        }
+
+        const id = 'prog_' + Date.now();
+        db.prepare(`
+            INSERT INTO user_media_progress (id, user_id, media_id, title, media_type, poster, current_season, current_episode, current_chapter, total_episodes, total_chapters)
+            VALUES (?, ?, ?, ?, ?, ?, 1, 1, 1, ?, ?)
+        `).run(id, user_id, media_id, title, media_type || 'series', poster || '', total_episodes || 10, total_chapters || 100);
+
+        res.json({ success: true, id });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 app.post('/api/progress/advance', (req, res) => {
     if (APP_MODE !== 'local') return res.status(400).json({ error: "Servidor em modo Supabase." });
     try {
@@ -170,7 +224,7 @@ app.get('/api/activities', (req, res) => {
     }
 });
 
-// Mídias do Catálogo por Categoria (novos_episodios, lancamentos, para_voce, aguardados, popular)
+// Mídias do Catálogo por Categoria
 app.get('/api/media', (req, res) => {
     if (APP_MODE !== 'local') return res.status(400).json({ error: "Servidor em modo Supabase." });
     try {
@@ -210,12 +264,48 @@ app.post('/api/reviews', (req, res) => {
     try {
         const { user_id, friend_name, friend_avatar, media_id, media_title, media_type, feeling, rating, review_text, is_spoiler, is_favorite } = req.body;
         const id = 'rev_' + Date.now();
+        
+        // Garantir que media_items existe
+        const mediaCheck = db.prepare('SELECT id FROM media_items WHERE id = ?').get(media_id);
+        if (!mediaCheck) {
+            db.prepare(`
+                INSERT INTO media_items (id, media_type, title)
+                VALUES (?, ?, ?)
+            `).run(media_id, media_type || 'series', media_title || 'Mídia');
+        }
+
         const stmt = db.prepare(`
             INSERT INTO reviews_ratings (id, user_id, friend_name, friend_avatar, media_id, media_title, media_type, feeling, rating, review_text, is_spoiler, is_favorite, date_text)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Agora')
         `);
-        stmt.run(id, user_id, friend_name || 'Usuário', friend_avatar || '', media_id, media_title, media_type, feeling, rating, review_text, is_spoiler ? 1 : 0, is_favorite ? 1 : 0);
+        stmt.run(id, user_id, friend_name || 'Usuário', friend_avatar || '', media_id, media_title, media_type || 'series', feeling || 'liked', rating || 5.0, review_text || '', is_spoiler ? 1 : 0, is_favorite ? 1 : 0);
         res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Listas Personalizadas
+app.get('/api/lists', (req, res) => {
+    if (APP_MODE !== 'local') return res.status(400).json({ error: "Servidor em modo Supabase." });
+    try {
+        const userId = req.query.user_id;
+        if (!userId) return res.json([]);
+        const lists = db.prepare('SELECT * FROM custom_lists WHERE user_id = ? ORDER BY created_at DESC').all(userId);
+        res.json(lists);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/lists', (req, res) => {
+    if (APP_MODE !== 'local') return res.status(400).json({ error: "Servidor em modo Supabase." });
+    try {
+        const { user_id, title, description, cover_url } = req.body;
+        if (!user_id || !title) return res.status(400).json({ error: "Título e ID do usuário são obrigatórios." });
+        const id = 'list_' + Date.now();
+        db.prepare('INSERT INTO custom_lists (id, user_id, title, description, cover_url) VALUES (?, ?, ?, ?, ?)').run(id, user_id, title, description || '', cover_url || '');
+        res.json({ success: true, id });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

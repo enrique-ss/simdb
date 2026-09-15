@@ -5,17 +5,26 @@ export async function renderProfileView(container) {
     if (!user) return;
 
     const favoritos = await getMediaByTag('favoritos');
+    const userInitial = (user.display_name || user.username || 'U')[0].toUpperCase();
+
+    const coverHtml = user.profile_cover_url 
+        ? `<img src="${user.profile_cover_url}" class="profile-cover-img">` 
+        : `<div class="profile-cover-img" style="background: linear-gradient(135deg, #1f1b2e 0%, #121018 100%);"></div>`;
+
+    const avatarHtml = user.avatar_url 
+        ? `<img src="${user.avatar_url}" class="profile-avatar-floating">` 
+        : `<div class="profile-avatar-floating" style="background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800;">${userInitial}</div>`;
 
     container.innerHTML = `
         <div class="profile-container">
-            <!-- 1. Cover Header (100% Dinâmico do SQLite) -->
+            <!-- 1. Cover Header (Sem Placeholders Fictícios) -->
             <div class="profile-cover-box">
-                <img src="${user.profile_cover_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800'}" class="profile-cover-img">
+                ${coverHtml}
                 <div style="position: absolute; top: 14px; right: 16px; color: white; font-size: 1.3rem; cursor: pointer;">•••</div>
-                <img src="${user.avatar_url || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}" class="profile-avatar-floating">
+                ${avatarHtml}
             </div>
 
-            <!-- Informações do Usuário & Ações (100% Dinâmico do SQLite) -->
+            <!-- Informações do Usuário & Ações -->
             <div class="profile-info-header">
                 <div class="profile-actions-row">
                     <button class="btn-edit-profile" id="edit-profile-trigger-btn">Editar Perfil</button>
@@ -24,14 +33,14 @@ export async function renderProfileView(container) {
                 <div>
                     <h2 style="font-size: 1.4rem; font-weight: 800; color: white;">${user.display_name || user.username}</h2>
                     <div style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 2px;">@${user.username}</div>
-                    <div style="color: var(--accent-purple); font-size: 0.75rem; font-weight: 700; margin-top: 4px;">[MEDALHAS AQUI]</div>
+                    <div id="medalhas-trigger-btn" style="color: var(--accent-purple); font-size: 0.75rem; font-weight: 700; margin-top: 4px; cursor: pointer;">🏆 Ver Conquistas & Medalhas</div>
                 </div>
 
                 <p style="font-size: 0.85rem; color: #D1D1D8; margin-top: 12px; line-height: 1.4;">
                     ${user.bio || 'Sem biografia informada.'}
                 </p>
 
-                <!-- Links das Redes (100% Dinâmico do SQLite) -->
+                <!-- Links das Redes -->
                 ${(user.letterboxd_link || user.serializd_link) ? `
                     <div style="display: flex; gap: 12px; margin-top: 10px; font-size: 0.78rem; color: var(--text-secondary);">
                         ${user.letterboxd_link ? `<span>📍 ${user.letterboxd_link}</span>` : ''}
@@ -39,8 +48,17 @@ export async function renderProfileView(container) {
                     </div>
                 ` : ''}
 
-                <!-- Painel de Estatísticas 4 colunas (100% Dinâmico do SQLite) -->
-                <div class="profile-stats-card">
+                <!-- Abas de Navegação do Perfil -->
+                <div style="display: flex; gap: 6px; overflow-x: auto; margin-top: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                    <button class="category-card-btn prof-tab-btn" data-tab="profile-feed" style="padding: 6px 10px; font-size: 0.78rem;">Feed</button>
+                    <button class="category-card-btn prof-tab-btn" data-tab="profile-biblioteca" style="padding: 6px 10px; font-size: 0.78rem;">Biblioteca</button>
+                    <button class="category-card-btn prof-tab-btn" data-tab="profile-diario" style="padding: 6px 10px; font-size: 0.78rem;">Diário</button>
+                    <button class="category-card-btn prof-tab-btn" data-tab="profile-listas" style="padding: 6px 10px; font-size: 0.78rem;">Listas</button>
+                    <button class="category-card-btn prof-tab-btn" data-tab="profile-avaliacoes" style="padding: 6px 10px; font-size: 0.78rem;">Avaliações</button>
+                </div>
+
+                <!-- Painel de Estatísticas 4 colunas -->
+                <div class="profile-stats-card" id="stats-card-trigger-btn" style="cursor: pointer;">
                     <div>
                         <div class="stat-num">${user.series_count || 0}</div>
                         <div class="stat-label">Séries</div>
@@ -60,17 +78,17 @@ export async function renderProfileView(container) {
                 </div>
 
                 <!-- Hall da Fama -->
-                <div style="margin-top: 20px;">
+                <div style="margin-top: 20px;" id="hall-fama-trigger-btn" style="cursor: pointer;">
                     <div class="section-header" style="margin-bottom: 8px;">
                         <h3 class="section-title">Hall da Fama</h3>
                     </div>
-                    <div style="position: relative; width: 100%; height: 110px; border-radius: var(--radius-md); overflow: hidden; background: #1B1824;">
-                        <img src="https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.7;">
+                    <div style="position: relative; width: 100%; height: 110px; border-radius: var(--radius-md); overflow: hidden; background: #1B1824; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Ver Personagens e Ships Favoritos</span>
                         <div style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: white; font-size: 1.3rem;">›</div>
                     </div>
                 </div>
 
-                <!-- Favoritos (100% Dinâmico do SQLite) -->
+                <!-- Favoritos -->
                 <div style="margin-top: 20px;">
                     <div class="section-header">
                         <h3 class="section-title">Favoritos</h3>
@@ -78,36 +96,8 @@ export async function renderProfileView(container) {
                     </div>
                     <div class="horizontal-scroll">
                         ${favoritos.length > 0 ? favoritos.map(item => `
-                            <div class="poster-card" data-id="${item.id}"><img src="${item.poster || 'https://via.placeholder.com/300x450?text=Capa'}" class="poster-img"></div>
+                            <div class="poster-card" data-id="${item.id}"><img src="${item.poster}" class="poster-img"></div>
                         `).join('') : '<div style="color: var(--text-muted); font-size: 0.85rem;">Nenhum favorito adicionado ainda.</div>'}
-                    </div>
-                </div>
-
-                <!-- Modal de Edição de Perfil & Imagens (Persiste no SQLite) -->
-                <div id="edit-profile-modal-box" class="hidden" style="margin-top: 20px; background: var(--bg-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-                    <h4 style="color: var(--accent-purple); margin-bottom: 12px;">Editar Perfil e Imagens</h4>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <div>
-                            <label style="font-size: 0.75rem; color: var(--text-secondary);">Nome Exibido:</label>
-                            <input type="text" id="edit-name" class="search-pill-input" value="${user.display_name || ''}">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.75rem; color: var(--text-secondary);">Biografia:</label>
-                            <input type="text" id="edit-bio" class="search-pill-input" value="${user.bio || ''}">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.75rem; color: var(--text-secondary);">Foto de Perfil (Avatar):</label>
-                            <input type="text" id="edit-avatar" class="search-pill-input" value="${user.avatar_url || ''}">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.75rem; color: var(--text-secondary);">Foto de Capa (Perfil):</label>
-                            <input type="text" id="edit-cover" class="search-pill-input" value="${user.profile_cover_url || ''}">
-                        </div>
-                        <div>
-                            <label style="font-size: 0.75rem; color: var(--text-secondary);">Banner da Home:</label>
-                            <input type="text" id="edit-banner" class="search-pill-input" value="${user.home_banner_url || ''}">
-                        </div>
-                        <button class="btn-edit-profile" id="save-profile-btn" style="width:100%; margin-top:10px;">Salvar Alterações</button>
                     </div>
                 </div>
             </div>
@@ -115,22 +105,23 @@ export async function renderProfileView(container) {
     `;
 
     const editTrigger = container.querySelector('#edit-profile-trigger-btn');
-    const modalBox = container.querySelector('#edit-profile-modal-box');
-    const saveBtn = container.querySelector('#save-profile-btn');
-
     editTrigger.addEventListener('click', () => {
-        modalBox.classList.toggle('hidden');
+        window.navigateTo('edit-profile');
     });
 
-    saveBtn.addEventListener('click', async () => {
-        const name = container.querySelector('#edit-name').value.trim();
-        const bio = container.querySelector('#edit-bio').value.trim();
-        const avatar = container.querySelector('#edit-avatar').value.trim();
-        const cover = container.querySelector('#edit-cover').value.trim();
-        const banner = container.querySelector('#edit-banner').value.trim();
+    const medalhasBtn = container.querySelector('#medalhas-trigger-btn');
+    if (medalhasBtn) medalhasBtn.addEventListener('click', () => window.navigateTo('conquistas'));
 
-        await updateUserProfile({ display_name: name, bio, avatar_url: avatar, profile_cover_url: cover, home_banner_url: banner });
-        alert("Perfil atualizado com sucesso no banco de dados!");
-        renderProfileView(container);
+    const statsBtn = container.querySelector('#stats-card-trigger-btn');
+    if (statsBtn) statsBtn.addEventListener('click', () => window.navigateTo('estatisticas'));
+
+    const hallFamaBtn = container.querySelector('#hall-fama-trigger-btn');
+    if (hallFamaBtn) hallFamaBtn.addEventListener('click', () => window.navigateTo('hall-fama'));
+
+    container.querySelectorAll('.prof-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const target = btn.dataset.tab;
+            if (target) window.navigateTo(target);
+        });
     });
 }

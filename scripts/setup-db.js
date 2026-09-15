@@ -28,9 +28,9 @@ db.exec(`
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         display_name TEXT,
-        avatar_url TEXT DEFAULT 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
-        profile_cover_url TEXT DEFAULT 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
-        home_banner_url TEXT DEFAULT 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=800',
+        avatar_url TEXT DEFAULT '',
+        profile_cover_url TEXT DEFAULT '',
+        home_banner_url TEXT DEFAULT '',
         bio TEXT DEFAULT '',
         letterboxd_link TEXT DEFAULT '',
         serializd_link TEXT DEFAULT '',
@@ -124,6 +124,30 @@ db.exec(`
 db.exec(`
     INSERT INTO support_goals (id, title, target_amount, current_amount, ads_watched_count)
     VALUES ('g1', 'Lançar a versão para IOS', 550.0, 0.0, 0);
+`);
+
+// Tabela de Listas Personalizadas
+db.exec(`
+    CREATE TABLE custom_lists (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        description TEXT DEFAULT '',
+        cover_url TEXT DEFAULT '',
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+`);
+
+db.exec(`
+    CREATE TABLE custom_list_items (
+        id TEXT PRIMARY KEY,
+        list_id TEXT NOT NULL REFERENCES custom_lists(id) ON DELETE CASCADE,
+        media_id TEXT REFERENCES media_items(id) ON DELETE CASCADE,
+        media_title TEXT,
+        media_poster TEXT,
+        media_type TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
 `);
 
 db.close();

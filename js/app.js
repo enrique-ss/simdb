@@ -5,6 +5,10 @@ import { renderImportExportView } from './views/import-export-view.js';
 import { renderApoieView } from './views/apoie-view.js';
 import { renderAuthView } from './views/auth-view.js';
 import { openMediaDetailModal } from './views/media-detail-view.js';
+import { renderProfileTab } from './views/profile-tabs-view.js';
+import { renderStatsView, renderConquistasView, renderHallFamaView } from './views/stats-conquistas-view.js';
+import { renderAmigosView, renderBlockedView, renderLanguageView, renderFullContinuarView } from './views/social-settings-view.js';
+import { renderEditProfileView } from './views/edit-profile-view.js';
 
 window.openMediaDetailModal = openMediaDetailModal;
 
@@ -15,7 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('global-modal');
     const closeModalBtn = document.getElementById('close-modal-btn');
 
-    // Verificar Sessão do Usuário
+    let historyStack = [];
+
     function getSessionUser() {
         const sessionData = localStorage.getItem('kindred_session_user');
         return sessionData ? JSON.parse(sessionData) : null;
@@ -25,8 +30,21 @@ document.addEventListener('DOMContentLoaded', () => {
         home: renderHomeView,
         search: renderSearchView,
         profile: renderProfileView,
+        'edit-profile': renderEditProfileView,
         apoie: renderApoieView,
         'import-export': renderImportExportView,
+        'profile-feed': (container) => renderProfileTab(container, 'feed'),
+        'profile-biblioteca': (container) => renderProfileTab(container, 'biblioteca'),
+        'profile-diario': (container) => renderProfileTab(container, 'diario'),
+        'profile-listas': (container) => renderProfileTab(container, 'listas'),
+        'profile-avaliacoes': (container) => renderProfileTab(container, 'avaliacoes'),
+        estatisticas: renderStatsView,
+        conquistas: renderConquistasView,
+        'hall-fama': renderHallFamaView,
+        amigos: renderAmigosView,
+        blocked: renderBlockedView,
+        language: renderLanguageView,
+        'continuar-full': renderFullContinuarView,
         notifications: async (container) => {
             container.innerHTML = `
                 <div class="section">
@@ -40,17 +58,28 @@ document.addEventListener('DOMContentLoaded', () => {
             container.innerHTML = `
                 <div class="section">
                     <h3 class="section-title" style="margin-bottom: 16px;">Configurações</h3>
-                    <div style="background: var(--bg-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 16px;">
-                        <div style="font-weight: 700; margin-bottom: 8px;">Conta: @${user ? user.username : ''}</div>
-                        <label style="font-size: 0.85rem; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                            <input type="checkbox"> Conta Privada
-                        </label>
+                    <div style="background: var(--bg-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 16px; display: flex; flex-direction: column; gap: 12px;">
+                        <div style="font-weight: 700;">Conta: @${user ? user.username : ''}</div>
+                        
+                        <button id="opt-blocked" style="background: none; border: none; color: white; text-align: left; padding: 8px 0; font-size: 0.9rem; cursor: pointer; border-bottom: 1px solid var(--border-color);">
+                            🚫 Contas Bloqueadas
+                        </button>
+                        <button id="opt-language" style="background: none; border: none; color: white; text-align: left; padding: 8px 0; font-size: 0.9rem; cursor: pointer; border-bottom: 1px solid var(--border-color);">
+                            🌐 Idioma e Região
+                        </button>
+                        <button id="opt-import" style="background: none; border: none; color: white; text-align: left; padding: 8px 0; font-size: 0.9rem; cursor: pointer;">
+                            📦 Importar e Exportar Dados
+                        </button>
                     </div>
                     <button id="logout-btn" style="width: 100%; background: var(--heart-red); color: white; border: none; padding: 12px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer;">
                         🚪 Sair da Conta
                     </button>
                 </div>
             `;
+
+            container.querySelector('#opt-blocked').addEventListener('click', () => navigateTo('blocked'));
+            container.querySelector('#opt-language').addEventListener('click', () => navigateTo('language'));
+            container.querySelector('#opt-import').addEventListener('click', () => navigateTo('import-export'));
 
             container.querySelector('#logout-btn').addEventListener('click', () => {
                 localStorage.removeItem('kindred_session_user');
@@ -59,10 +88,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    async function navigateTo(viewName) {
+    async function navigateTo(viewName, isBack = false) {
         const currentUser = getSessionUser();
 
-        // Se não houver usuário logado no banco zerado, exibe obrigatoriamente a Tela de Cadastro (Figma exact match)
         if (!currentUser) {
             bottomNav.style.display = 'none';
             renderAuthView(viewContainer, 'register');
@@ -71,6 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         bottomNav.style.display = 'flex';
         if (!views[viewName]) viewName = 'home';
+
+        if (!isBack && historyStack[historyStack.length - 1] !== viewName) {
+            historyStack.push(viewName);
+        }
 
         navItems.forEach(item => {
             if (item.dataset.view === viewName) {
@@ -85,7 +117,18 @@ document.addEventListener('DOMContentLoaded', () => {
         window.scrollTo(0, 0);
     }
 
+    function navigateBack() {
+        if (historyStack.length > 1) {
+            historyStack.pop();
+            const previousView = historyStack[historyStack.length - 1];
+            navigateTo(previousView, true);
+        } else {
+            navigateTo('home');
+        }
+    }
+
     window.navigateTo = navigateTo;
+    window.navigateBack = navigateBack;
 
     navItems.forEach(item => {
         item.addEventListener('click', () => {

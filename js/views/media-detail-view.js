@@ -1,5 +1,5 @@
 import { BOOK_ICON_EMOJI } from '../config.js';
-import { getMediaReviews, postReview } from '../supabase-client.js';
+import { getMediaReviews, postReview, addMediaToProgress } from '../supabase-client.js';
 
 export async function openMediaDetailModal(mediaItem) {
     const modal = document.getElementById('global-modal');
@@ -62,6 +62,7 @@ export async function openMediaDetailModal(mediaItem) {
                 </label>
             </div>
             <textarea id="review-text-input" class="search-pill-input" rows="3" placeholder="Escreva o que achou..." style="border-radius: var(--radius-md);"></textarea>
+            <button class="btn-edit-profile" id="add-to-progress-btn" style="width: 100%; margin-top: 8px; padding: 10px; background: rgba(142, 91, 238, 0.2); border: 1px solid var(--accent-purple);">➕ Adicionar ao Continuar</button>
             <button class="btn-edit-profile" id="submit-review-btn" style="width: 100%; margin-top: 8px; padding: 12px;">Publicar Avaliação</button>
         </div>
 
@@ -92,6 +93,22 @@ export async function openMediaDetailModal(mediaItem) {
             currentFeeling = btn.dataset.feeling;
         });
     });
+
+    const addToProgressBtn = bodyEl.querySelector('#add-to-progress-btn');
+    if (addToProgressBtn) {
+        addToProgressBtn.addEventListener('click', async () => {
+            await addMediaToProgress({
+                media_id: mediaItem.id,
+                title: mediaItem.title,
+                media_type: mediaItem.media_type,
+                poster: mediaItem.poster,
+                total_episodes: mediaItem.total_episodes || 10,
+                total_chapters: mediaItem.total_chapters || 100
+            });
+            alert("Mídia adicionada ao seu consumo contínuo!");
+            modal.classList.add('hidden');
+        });
+    }
 
     const submitReviewBtn = bodyEl.querySelector('#submit-review-btn');
     submitReviewBtn.addEventListener('click', async () => {

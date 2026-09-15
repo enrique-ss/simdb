@@ -176,6 +176,38 @@ export async function postReview(reviewData) {
     }
 }
 
+export async function addMediaToProgress(mediaData) {
+    const sessionUser = getSessionUser();
+    if (!sessionUser) return;
+
+    try {
+        const res = await fetch('/api/progress/add', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: sessionUser.id,
+                ...mediaData
+            })
+        });
+        return await res.json();
+    } catch (err) {
+        console.error("Erro ao adicionar mídia ao progresso:", err);
+    }
+}
+
+export async function getUserLists() {
+    const sessionUser = getSessionUser();
+    if (!sessionUser) return [];
+
+    try {
+        const res = await fetch(`/api/lists?user_id=${sessionUser.id}`);
+        if (!res.ok) return [];
+        return await res.json();
+    } catch (err) {
+        return [];
+    }
+}
+
 export async function getApoieGoal() {
     try {
         const res = await fetch('/api/apoie');
