@@ -1,12 +1,12 @@
-const { DatabaseSync } = require('node:sqlite');
+const Database = require('better-sqlite3');
 const path = require('path');
 
 const DB_PATH = path.join(__dirname, '..', 'kindred.db');
 
 console.log('🔄 Executando npm run setup: criando banco de dados SQLite ZERADO...');
 
-const db = new DatabaseSync(DB_PATH);
-db.exec('PRAGMA foreign_keys = OFF;');
+const db = new Database(DB_PATH);
+db.pragma('foreign_keys = OFF');
 
 db.exec('DROP TABLE IF EXISTS messages;');
 db.exec('DROP TABLE IF EXISTS notifications;');
@@ -20,7 +20,7 @@ db.exec('DROP TABLE IF EXISTS media_items;');
 db.exec('DROP TABLE IF EXISTS profiles;');
 db.exec('DROP TABLE IF EXISTS support_goals;');
 
-db.exec('PRAGMA foreign_keys = ON;');
+db.pragma('foreign_keys = ON');
 
 // Tabela de Perfis (Zerada)
 db.exec(`
@@ -29,6 +29,10 @@ db.exec(`
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'user' CHECK(role IN ('user', 'admin')),
+        is_banned INTEGER NOT NULL DEFAULT 0 CHECK(is_banned IN (0, 1)),
+        banned_at DATETIME,
+        banned_reason TEXT DEFAULT '',
         display_name TEXT,
         avatar_url TEXT DEFAULT '',
         profile_cover_url TEXT DEFAULT '',
@@ -36,6 +40,12 @@ db.exec(`
         bio TEXT DEFAULT '',
         letterboxd_link TEXT DEFAULT '',
         serializd_link TEXT DEFAULT '',
+        profile_theme TEXT NOT NULL DEFAULT 'violet' CHECK(profile_theme IN ('violet', 'rose', 'ocean')),
+        is_private INTEGER NOT NULL DEFAULT 0 CHECK(is_private IN (0, 1)),
+        stats_private INTEGER NOT NULL DEFAULT 0 CHECK(stats_private IN (0, 1)),
+        media_filter TEXT NOT NULL DEFAULT 'all' CHECK(media_filter IN ('all', 'movies', 'series', 'games', 'books')),
+        language_region TEXT NOT NULL DEFAULT 'pt-BR',
+        notifications_enabled INTEGER NOT NULL DEFAULT 1 CHECK(notifications_enabled IN (0, 1)),
         series_count INTEGER DEFAULT 0,
         movies_count INTEGER DEFAULT 0,
         games_count INTEGER DEFAULT 0,

@@ -1,4 +1,4 @@
-const { DatabaseSync } = require('node:sqlite');
+const Database = require('better-sqlite3');
 const fs = require('fs');
 const path = require('path');
 
@@ -12,20 +12,22 @@ if (!fs.existsSync(DB_PATH)) {
 
 console.log('🌱 Executando npm run asset: alimentando o banco de dados com volume de usuários, mídias e interações...');
 
-const db = new DatabaseSync(DB_PATH);
+const db = new Database(DB_PATH);
 
 // Habilitar Foreign Keys
-db.exec('PRAGMA foreign_keys = ON;');
+db.pragma('foreign_keys = ON');
 
 // 1. Inserir Perfis de Usuário de Exemplo
 const stmtUser = db.prepare(`
-    INSERT OR REPLACE INTO profiles (id, username, display_name, avatar_url, profile_cover_url, home_banner_url, bio, letterboxd_link, serializd_link, series_count, movies_count, games_count, works_count)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    INSERT OR REPLACE INTO profiles (id, username, email, password, display_name, avatar_url, profile_cover_url, home_banner_url, bio, letterboxd_link, serializd_link, series_count, movies_count, games_count, works_count)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 `);
 
 stmtUser.run(
     'u1',
     'inhunicent',
+    'inhunicent@example.test',
+    'kindred-demo-password',
     'nicoly',
     'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
     'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
@@ -36,10 +38,10 @@ stmtUser.run(
     300, 1333, 86, 8
 );
 
-stmtUser.run('u2', 'luana_c', 'Luana', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', '', '', 'Fã de séries e drama.', '', '', 120, 450, 10, 5);
-stmtUser.run('u3', 'thay_v', 'Thay', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150', '', '', 'Cineasta e leitora assídua.', '', '', 210, 890, 40, 12);
-stmtUser.run('u4', 'mafe_g', 'Mafe', 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150', '', '', 'Gamer e fã de RPGs.', '', '', 80, 300, 150, 2);
-stmtUser.run('u5', 'alice_b', 'Alice', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150', '', '', 'Leitora de fantasia.', '', '', 45, 120, 5, 25);
+stmtUser.run('u2', 'luana_c', 'luana_c@example.test', 'kindred-demo-password', 'Luana', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150', '', '', 'Fã de séries e drama.', '', '', 120, 450, 10, 5);
+stmtUser.run('u3', 'thay_v', 'thay_v@example.test', 'kindred-demo-password', 'Thay', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150', '', '', 'Cineasta e leitora assídua.', '', '', 210, 890, 40, 12);
+stmtUser.run('u4', 'mafe_g', 'mafe_g@example.test', 'kindred-demo-password', 'Mafe', 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150', '', '', 'Gamer e fã de RPGs.', '', '', 80, 300, 150, 2);
+stmtUser.run('u5', 'alice_b', 'alice_b@example.test', 'kindred-demo-password', 'Alice', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150', '', '', 'Leitora de fantasia.', '', '', 45, 120, 5, 25);
 
 // 2. Inserir Mídias no Catálogo
 const stmtMedia = db.prepare(`

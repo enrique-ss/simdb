@@ -2,14 +2,16 @@
   "name": "kindred",
   "version": "1.0.0",
   "description": "Kindred — Catalogador & Match Social de Mídias",
-  "main": "server.js",
+  "main": "src/index.js",
   "scripts": {
     "setup": "node scripts/setup-db.js",
-    "dev": "node server.js",
+    "dev": "node src/index.js",
     "asset": "node scripts/seed-db.js"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.103.0",
     "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.9.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
