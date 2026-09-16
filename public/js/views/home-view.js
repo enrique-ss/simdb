@@ -112,7 +112,7 @@ export async function renderHomeView(container) {
                             <img src="${act.media_poster || 'https://via.placeholder.com/300x450?text=Capa'}" style="width:100%; height:100%; object-fit:cover;">
                             <div class="friend-activity-overlay">
                                 <div class="friend-info-row">
-                                    ${act.friend_avatar ? `<img src="${act.friend_avatar}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.2);">` : `<div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.2);">${(${nameVar} || 'U')[0].toUpperCase()}</div>`}
+                                    ${act.friend_avatar ? `<img src="${act.friend_avatar}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.2);">` : `<div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.2);">${(act.friend_name || 'U')[0].toUpperCase()}</div>`}
                                     <div class="friend-name-time">
                                         <span>${act.friend_name || 'Amigo'}</span>
                                         <span style="opacity:0.7; font-weight:400;">${act.date_text || 'Agora'}</span>

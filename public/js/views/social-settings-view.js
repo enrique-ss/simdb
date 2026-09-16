@@ -29,7 +29,7 @@ export async function renderAmigosView(container) {
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 10px;">
                         ${friendsData.friends.map(f => `
                             <div class="user-card-item" data-id="${f.id}" style="display: flex; flex-direction: column; align-items: center; text-align: center; cursor: pointer;">
-                                ${f.avatar_url ? `<img src="${f.avatar_url}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 6px; border: 2px solid var(--accent-purple);">` : `<div style="width: 60px; height: 60px; border-radius: 50%; background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 27px; flex-shrink: 0; margin-bottom: 6px; border: 2px solid var(--accent-purple);">${(${nameVar} || 'U')[0].toUpperCase()}</div>`}
+                                ${f.avatar_url ? `<img src="${f.avatar_url}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 6px; border: 2px solid var(--accent-purple);">` : `<div style="width: 60px; height: 60px; border-radius: 50%; background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 27px; flex-shrink: 0; margin-bottom: 6px; border: 2px solid var(--accent-purple);">${(f.display_name || f.username || 'U')[0].toUpperCase()}</div>`}
                                 <span style="font-weight: 800; color: white; font-size: 0.82rem; line-height: 1.1;">${f.display_name || f.username}</span>
                                 <span style="font-size: 0.68rem; color: var(--text-muted); margin-top: 2px;">@${f.username}</span>
                             </div>
@@ -54,7 +54,7 @@ export async function renderAmigosView(container) {
                             ${friendsData.pendingIncoming.map(p => `
                                 <div style="background: #14141A; padding: 12px; border-radius: 12px; border: 1px solid #242430; display: flex; align-items: center; justify-content: space-between;">
                                     <div class="user-card-item" data-id="${p.id}" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                                        ${p.avatar_url ? `<img src="${p.avatar_url}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; ">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; flex-shrink: 0; ">${(${nameVar} || 'U')[0].toUpperCase()}</div>`}
+                                        ${p.avatar_url ? `<img src="${p.avatar_url}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; ">` : `<div style="width: 40px; height: 40px; border-radius: 50%; background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; flex-shrink: 0; ">${(f.display_name || f.username || 'U')[0].toUpperCase()}</div>`}
                                         <div>
                                             <div style="font-weight: 700; color: white; font-size: 0.88rem;">${p.display_name || p.username}</div>
                                             <div style="font-size: 0.75rem; color: var(--text-muted);">@${p.username}</div>
@@ -92,7 +92,7 @@ export async function renderAmigosView(container) {
                             return `
                                 <div style="background: #14141A; padding: 12px; border-radius: 12px; border: 1px solid #242430; display: flex; align-items: center; justify-content: space-between;">
                                     <div class="user-card-item" data-id="${u.id}" style="display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1;">
-                                        ${u.avatar_url ? `<img src="${u.avatar_url}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; ">` : `<div style="width: 44px; height: 44px; border-radius: 50%; background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; flex-shrink: 0; ">${(${nameVar} || 'U')[0].toUpperCase()}</div>`}
+                                        ${u.avatar_url ? `<img src="${u.avatar_url}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; ">` : `<div style="width: 44px; height: 44px; border-radius: 50%; background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; flex-shrink: 0; ">${(f.display_name || f.username || 'U')[0].toUpperCase()}</div>`}
                                         <div>
                                             <div style="font-weight: 700; color: white; font-size: 0.9rem;">${u.display_name || u.username}</div>
                                             <div style="font-size: 0.75rem; color: var(--text-muted);">@${u.username}</div>
@@ -220,7 +220,7 @@ export async function renderAmigosView(container) {
                 searchResults.innerHTML = users.map(u => `
                     <div style="background: var(--bg-card); padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between;">
                         <div class="user-card-item" data-id="${u.id}" style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                            ${u.avatar_url ? `<img src="${u.avatar_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; ">` : `<div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; ">${(${nameVar} || 'U')[0].toUpperCase()}</div>`}
+                            ${u.avatar_url ? `<img src="${u.avatar_url}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; ">` : `<div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; ">${(f.display_name || f.username || 'U')[0].toUpperCase()}</div>`}
                             <div>
                                 <div style="font-weight: 700; color: white; font-size: 0.82rem;">${u.display_name || u.username}</div>
                                 <div style="font-size: 0.7rem; color: var(--text-muted);">@${u.username}</div>
