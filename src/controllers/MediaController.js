@@ -59,7 +59,7 @@ class MediaController {
     addProgress = (req, res) => {
         if (!isOfflineMode) return res.status(400).json({ error: "Servidor em modo Supabase." });
         try {
-            const { media_id, title, media_type, poster, total_episodes, total_chapters } = req.body;
+            const { media_id, title, media_type, poster, total_episodes, total_chapters, current_season, current_episode, current_chapter } = req.body;
             const user_id = req.user.id;
             
             if (!media_id || !title) {
@@ -74,23 +74,38 @@ class MediaController {
                 `).run(media_id, media_type || 'series', title, poster || '');
             }
 
+            const seasonNum = parseInt(current_season) || 1;
+            const episodeNum = parseInt(current_episode) || 1;
+            const chapterNum = parseInt(current_chapter) || 1;
+
+            let activityDesc = '';
+            if (media_type === 'book') {
+                activityDesc = `Capítulo ${chapterNum}`;
+            } else if (media_type === 'series') {
+                activityDesc = `Temporada ${seasonNum} • Episódio ${episodeNum}`;
+            } else {
+                activityDesc = `Assistindo / Jogando`;
+            }
+
             const existing = db.prepare('SELECT id FROM user_media_progress WHERE user_id = ? AND media_id = ?').get(user_id, media_id);
             if (existing) {
                 db.prepare(`
                     UPDATE user_media_progress 
-                    SET last_updated = CURRENT_TIMESTAMP
+                    SET current_season = ?, current_episode = ?, current_chapter = ?, last_updated = CURRENT_TIMESTAMP
                     WHERE id = ?
-                `).run(existing.id);
+                `).run(seasonNum, episodeNum, chapterNum, existing.id);
+
+                this.logActivity(user_id, 'media_progress', title, activityDesc, media_id, poster);
                 return res.json({ success: true, id: existing.id });
             }
 
             const id = 'prog_' + Date.now();
             db.prepare(`
                 INSERT INTO user_media_progress (id, user_id, media_id, title, media_type, poster, current_season, current_episode, current_chapter, total_episodes, total_chapters)
-                VALUES (?, ?, ?, ?, ?, ?, 1, 1, 1, ?, ?)
-            `).run(id, user_id, media_id, title, media_type || 'series', poster || '', total_episodes || 10, total_chapters || 100);
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(id, user_id, media_id, title, media_type || 'series', poster || '', seasonNum, episodeNum, chapterNum, total_episodes || 10, total_chapters || 100);
 
-            this.logActivity(user_id, 'media_start', `Começou a assistir/ler ${title}`, media_type, media_id, poster);
+            this.logActivity(user_id, 'media_start', title, activityDesc, media_id, poster);
 
             res.json({ success: true, id });
         } catch (err) {
@@ -111,13 +126,21 @@ class MediaController {
                 return res.status(404).json({ error: "Progresso não encontrado ou não pertence ao usuário" });
             }
             
+            let activityDesc = '';
             if (item.media_type === 'series') {
-                db.prepare('UPDATE user_media_progress SET current_episode = current_episode + 1, last_updated = CURRENT_TIMESTAMP WHERE id = ?').run(id);
+                const nextEpisode = item.current_episode + 1;
+                db.prepare('UPDATE user_media_progress SET current_episode = ?, last_updated = CURRENT_TIMESTAMP WHERE id = ?').run(nextEpisode, id);
+                activityDesc = `Temporada ${item.current_season} • Episódio ${nextEpisode}`;
             } else if (item.media_type === 'book') {
-                db.prepare('UPDATE user_media_progress SET current_chapter = current_chapter + 1, last_updated = CURRENT_TIMESTAMP WHERE id = ?').run(id);
+                const nextChapter = item.current_chapter + 1;
+                db.prepare('UPDATE user_media_progress SET current_chapter = ?, last_updated = CURRENT_TIMESTAMP WHERE id = ?').run(nextChapter, id);
+                activityDesc = `Capítulo ${nextChapter}`;
+            } else {
+                db.prepare('UPDATE user_media_progress SET last_updated = CURRENT_TIMESTAMP WHERE id = ?').run(id);
+                activityDesc = `Concluído / Atualizado`;
             }
 
-            this.logActivity(item.user_id, 'media_progress', `Avançou no progresso de ${item.title}`, `Episódio/Capítulo avançado`, item.media_id, item.poster);
+            this.logActivity(item.user_id, 'media_progress', item.title, activityDesc, item.media_id, item.poster);
             res.json({ success: true });
         } catch (err) {
             res.status(500).json({ error: err.message });

@@ -6,8 +6,6 @@ export async function renderHomeView(container) {
     const activities = await getFriendsActivities();
     const newEpisodes = await getMediaByTag('novos_episodios');
 
-    // A capa da Home é a própria capa do perfil, para manter a identidade visual
-    // consistente entre as duas telas.
     const coverUrl = user.profile_cover_url || user.home_banner_url;
     const userBannerHtml = coverUrl
         ? `<img src="${coverUrl}" class="home-banner-img" alt="Capa do perfil">`
@@ -30,7 +28,7 @@ export async function renderHomeView(container) {
             <div style="font-size: 1.2rem; color: var(--text-muted); font-weight: 300;">›</div>
         </div>
 
-        <!-- Seção: Continuar (100% Dinâmico do SQLite) -->
+        <!-- Seção: Continuar -->
         <section class="section">
             <div class="section-header">
                 <h3 class="section-title">
@@ -41,6 +39,17 @@ export async function renderHomeView(container) {
             </div>
             <div class="horizontal-scroll">
                 ${progressList.length > 0 ? progressList.map(item => {
+                    let progBadge = item.progress_text;
+                    if (!progBadge) {
+                        if (item.media_type === 'series') {
+                            progBadge = `S${String(item.current_season || 1).padStart(2, '0')} • E${String(item.current_episode || 1).padStart(2, '0')}`;
+                        } else if (item.media_type === 'book') {
+                            progBadge = `Cap ${item.current_chapter || 1}`;
+                        } else {
+                            progBadge = 'Em progresso';
+                        }
+                    }
+
                     return `
                         <div class="poster-card" data-id="${item.id}">
                             <div class="poster-img-wrapper">
@@ -48,7 +57,7 @@ export async function renderHomeView(container) {
                                 <div class="badge-top-right">${item.icon_badge || '✓'}</div>
                                 <div class="progress-bar-indicator"></div>
                             </div>
-                            <div class="poster-footer-pill">${item.progress_text || 'Em progresso'}</div>
+                            <div class="poster-footer-pill">${progBadge}</div>
                         </div>
                     `;
                 }).join('') : `
@@ -59,7 +68,7 @@ export async function renderHomeView(container) {
             </div>
         </section>
 
-        <!-- Seção: Novos episódios (100% Dinâmico do SQLite) -->
+        <!-- Seção: Novos episódios -->
         <section class="section">
             <div class="section-header">
                 <h3 class="section-title">
@@ -73,7 +82,7 @@ export async function renderHomeView(container) {
                         <div class="poster-img-wrapper">
                             <img src="${item.poster || 'https://via.placeholder.com/300x450?text=Sem+Capa'}" class="poster-img">
                             <div style="position: absolute; bottom: 6px; left: 6px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; color: white;">
-                                S01 E10
+                                ${item.release_year || 'S01 E10'}
                             </div>
                         </div>
                     </div>
@@ -86,7 +95,7 @@ export async function renderHomeView(container) {
         </section>
 
         ${activities.length > 0 ? `
-        <!-- Seção: Atividade de Amigos (exibida somente com amigos aceitos) -->
+        <!-- Seção: Atividade de Amigos -->
         <section class="section">
             <div class="section-header">
                 <h3 class="section-title">
@@ -99,16 +108,17 @@ export async function renderHomeView(container) {
                     const stars = '★'.repeat(Math.round(act.rating || 5)) + '☆'.repeat(5 - Math.round(act.rating || 5));
 
                     return `
-                        <div class="friend-activity-poster-card">
+                        <div class="friend-activity-poster-card friend-card-click" data-userid="${act.user_id}">
                             <img src="${act.media_poster || 'https://via.placeholder.com/300x450?text=Capa'}" style="width:100%; height:100%; object-fit:cover;">
                             <div class="friend-activity-overlay">
                                 <div class="friend-info-row">
-                                    <img src="${act.friend_avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150'}" class="friend-avatar-tiny">
+                                    ${act.friend_avatar ? `<img src="${act.friend_avatar}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.2);">` : `<div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.2);">${(${nameVar} || 'U')[0].toUpperCase()}</div>`}
                                     <div class="friend-name-time">
                                         <span>${act.friend_name || 'Amigo'}</span>
                                         <span style="opacity:0.7; font-weight:400;">${act.date_text || 'Agora'}</span>
                                     </div>
                                 </div>
+                                ${act.review_text ? `<div style="font-size:0.72rem; color: #E2D5FC; margin-top:2px;">${act.review_text}</div>` : ''}
                                 <div class="friend-rating-row">
                                     <span class="friend-rating-stars">${stars}</span>
                                     <span class="heart-icon">♥</span>
@@ -123,26 +133,29 @@ export async function renderHomeView(container) {
     `;
 
     const apoieBanner = container.querySelector('#apoie-banner-btn');
-    if (apoieBanner) {
-        apoieBanner.addEventListener('click', () => {
-            window.navigateTo('apoie');
-        });
-    }
+    if (apoieBanner) apoieBanner.addEventListener('click', () => window.navigateTo('apoie'));
 
     const seeMoreContinuar = container.querySelector('#see-more-continuar');
-    if (seeMoreContinuar) seeMoreContinuar.addEventListener('click', () => window.navigateTo('continuar-full'));
+    if (seeMoreContinuar) seeMoreContinuar.addEventListener('click', () => window.navigateTo('continuar'));
 
     const seeMoreEpisodes = container.querySelector('#see-more-episodes');
-    if (seeMoreEpisodes) seeMoreEpisodes.addEventListener('click', () => window.navigateTo('continuar-full'));
+    if (seeMoreEpisodes) seeMoreEpisodes.addEventListener('click', () => window.navigateTo('novos-episodios'));
 
     const seeMoreAmigos = container.querySelector('#see-more-amigos');
     if (seeMoreAmigos) seeMoreAmigos.addEventListener('click', () => window.navigateTo('amigos'));
+
+    container.querySelectorAll('.friend-card-click').forEach(card => {
+        card.addEventListener('click', () => {
+            const uid = card.dataset.userid;
+            if (uid) window.navigateTo('profile', { userId: uid });
+        });
+    });
 
     container.querySelectorAll('.poster-card[data-id]').forEach((card, idx) => {
         card.addEventListener('click', async () => {
             const item = progressList[idx];
             if (item) {
-                await fetch('/api/progress/advance', {
+                await fetch('/api/media/progress/advance', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id: item.id })

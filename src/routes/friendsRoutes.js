@@ -13,6 +13,9 @@ router.get('/', authenticateToken, controller.getFriends);
 // Buscar usuários para adicionar como amigos
 router.get('/search', authenticateToken, controller.searchFriends);
 
+// Buscar todas as sugestões / todos os usuários cadastrados
+router.get('/suggestions', authenticateToken, controller.getSuggestions);
+
 // Enviar solicitação de amizade
 router.post('/request', authenticateToken, controller.sendRequest);
 

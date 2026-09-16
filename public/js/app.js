@@ -11,6 +11,7 @@ import { renderAmigosView, renderBlockedView, renderLanguageView, renderFullCont
 import { renderEditProfileView } from './views/edit-profile-view.js';
 import { renderSettingsView } from './views/settings-view.js';
 import { renderAdminView } from './views/admin-view.js';
+import { renderCatalogListView } from './views/catalog-list-view.js';
 import { getToken, getSessionUser, getCurrentUserProfile } from './supabase-client.js';
 
 window.openMediaDetailModal = openMediaDetailModal;
@@ -31,18 +32,24 @@ document.addEventListener('DOMContentLoaded', () => {
         'edit-profile': renderEditProfileView,
         apoie: renderApoieView,
         'import-export': renderImportExportView,
-        'profile-feed': (container) => renderProfileTab(container, 'feed'),
-        'profile-biblioteca': (container) => renderProfileTab(container, 'biblioteca'),
-        'profile-diario': (container) => renderProfileTab(container, 'diario'),
-        'profile-listas': (container) => renderProfileTab(container, 'listas'),
-        'profile-avaliacoes': (container) => renderProfileTab(container, 'avaliacoes'),
+        'profile-feed': (container, params) => renderProfileTab(container, 'feed', params),
+        'profile-biblioteca': (container, params) => renderProfileTab(container, 'biblioteca', params),
+        'profile-diario': (container, params) => renderProfileTab(container, 'diario', params),
+        'profile-listas': (container, params) => renderProfileTab(container, 'listas', params),
+        'profile-avaliacoes': (container, params) => renderProfileTab(container, 'avaliacoes', params),
         estatisticas: renderStatsView,
         conquistas: renderConquistasView,
         'hall-fama': renderHallFamaView,
         amigos: renderAmigosView,
         blocked: renderBlockedView,
         language: renderLanguageView,
-        'continuar-full': renderFullContinuarView,
+        continuar: renderFullContinuarView,
+        lancamentos: (container) => renderCatalogListView(container, { title: 'Lançamentos', tag: 'lancamentos', emptyMessage: 'Nenhum lançamento no momento.' }),
+        'para-voce': (container) => renderCatalogListView(container, { title: 'Para você', tag: 'para_voce', emptyMessage: 'Nenhuma recomendação no momento.' }),
+        aguardados: (container) => renderCatalogListView(container, { title: 'Mais aguardados', tag: 'aguardados', emptyMessage: 'Nenhum título aguardado.' }),
+        'novos-episodios': (container) => renderCatalogListView(container, { title: 'Novos episódios', tag: 'novos_episodios', emptyMessage: 'Nenhum novo episódio disponível no momento.' }),
+        comunidade: renderAmigosView,
+        favoritos: renderProfileView,
         notifications: async (container) => {
             const token = getToken();
             let notifs = [];
@@ -78,116 +85,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         },
-        'legacy-settings': async (container) => {
-            const user = getSessionUser();
-            container.innerHTML = `
-                <div class="section" style="padding: 16px;">
-                    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px;">
-                        <button id="settings-back-btn" style="background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer;">‹</button>
-                        <h3 style="font-weight: 800; font-size: 1.2rem; color: white;">Configurações</h3>
-                    </div>
-
-                    <!-- Banner Apoie o Kindred (Configurações.pdf) -->
-                    <div class="apoie-banner-card" id="settings-apoie-card" style="margin: 0 0 24px 0;">
-                        <div class="apoie-banner-left">
-                            <div class="apoie-k-icon">K</div>
-                            <div>
-                                <div class="apoie-title">Apoie o Kindred</div>
-                                <div class="apoie-sub">Assista um anúncio para contribuir, nos ajudando a manter o aplicativo ativo e funcionando.</div>
-                            </div>
-                        </div>
-                        <div style="color: var(--text-secondary); font-size: 1.2rem;">›</div>
-                    </div>
-
-                    <!-- Grupo: Perfil -->
-                    <div style="margin-bottom: 24px;">
-                        <h4 style="font-size: 0.85rem; font-weight: 700; color: white; margin-bottom: 10px;">Perfil</h4>
-                        <div style="background: #14141C; border-radius: 14px; border: 1px solid #242432; overflow: hidden;">
-                            <div id="opt-color" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432; cursor: pointer;">
-                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
-                                    Cor do perfil
-                                </div>
-                                <span style="color: var(--text-muted);">›</span>
-                            </div>
-                            <div id="opt-blocked" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432; cursor: pointer;">
-                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
-                                    Contas bloqueadas
-                                </div>
-                                <span style="color: var(--text-muted);">›</span>
-                            </div>
-                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432;">
-                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
-                                    Conta privada
-                                </div>
-                                <input type="checkbox" style="accent-color: var(--accent-purple); width: 18px; height: 18px; cursor: pointer;">
-                            </div>
-                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;">
-                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
-                                    Estatísticas privadas
-                                </div>
-                                <input type="checkbox" style="accent-color: var(--accent-purple); width: 18px; height: 18px; cursor: pointer;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Grupo: Personalização -->
-                    <div style="margin-bottom: 28px;">
-                        <h4 style="font-size: 0.85rem; font-weight: 700; color: white; margin-bottom: 10px;">Personalização</h4>
-                        <div style="background: #14141C; border-radius: 14px; border: 1px solid #242432; overflow: hidden;">
-                            <div id="opt-banner-home" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432; cursor: pointer;">
-                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
-                                    Banner da página inicial
-                                </div>
-                                <span style="color: var(--text-muted);">›</span>
-                            </div>
-                            <div id="opt-banner-stats" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432; cursor: pointer;">
-                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
-                                    Banner da página de estatísticas
-                                </div>
-                                <span style="color: var(--text-muted);">›</span>
-                            </div>
-                            <div id="opt-filter" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432; cursor: pointer;">
-                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
-                                    Filtro de mídia
-                                </div>
-                                <span style="color: var(--text-muted);">›</span>
-                            </div>
-                            <div id="opt-language" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #242432; cursor: pointer;">
-                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
-                                    Idioma e região
-                                </div>
-                                <span style="color: var(--text-muted);">›</span>
-                            </div>
-                            <div id="opt-notifications" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer;">
-                                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; font-weight: 600;">
-                                    Notificações
-                                </div>
-                                <span style="color: var(--text-muted);">›</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button id="logout-btn" style="width: 100%; background: #2A1F26; color: var(--heart-red); border: 1px solid rgba(255,75,110,0.3); padding: 14px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer;">
-                        Sair da Conta
-                    </button>
-                </div>
-            `;
-
-            container.querySelector('#settings-back-btn').addEventListener('click', () => navigateBack());
-            const apoieCard = container.querySelector('#settings-apoie-card');
-            if (apoieCard) apoieCard.addEventListener('click', () => navigateTo('apoie'));
-
-            container.querySelector('#opt-blocked').addEventListener('click', () => navigateTo('blocked'));
-            container.querySelector('#opt-language').addEventListener('click', () => navigateTo('language'));
-
-            container.querySelector('#logout-btn').addEventListener('click', () => {
-                localStorage.removeItem('kindred_session_user');
-                localStorage.removeItem('kindred_token');
-                window.location.reload();
-            });
-        },
-        settings: renderSettingsView
-        ,admin: renderAdminView
+        settings: renderSettingsView,
+        admin: renderAdminView
     };
 
     let socket = null;
@@ -201,7 +100,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    async function navigateTo(viewName, isBack = false) {
+    async function navigateTo(viewName, params = null, isBack = false) {
+        // Se params for boolean (veio de isBack antigo)
+        if (typeof params === 'boolean') {
+            isBack = params;
+            params = null;
+        }
+
         const currentUser = await getCurrentUserProfile();
 
         if (!currentUser) {
@@ -214,12 +119,20 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.dataset.profileTheme = currentUser.profile_theme || 'violet';
         if (!views[viewName]) viewName = 'home';
 
-        if (!isBack && historyStack[historyStack.length - 1] !== viewName) {
-            historyStack.push(viewName);
+        let targetHash = '#/' + viewName;
+        if (viewName === 'profile' && params && params.userId) {
+            targetHash = '#/profile/' + params.userId;
+        } else if (params && typeof params === 'string') {
+            targetHash = '#/' + viewName + '/' + params;
         }
 
+        if (window.location.hash !== targetHash) {
+            history.pushState(null, '', targetHash);
+        }
+
+        const navKey = viewName === 'comunidade' ? 'amigos' : viewName;
         navItems.forEach(item => {
-            if (item.dataset.view === viewName) {
+            if (item.dataset.view === navKey) {
                 item.classList.add('active');
             } else {
                 item.classList.remove('active');
@@ -228,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         viewContainer.innerHTML = '<div style="padding: 60px 0; text-align: center; color: var(--text-secondary);">Carregando...</div>';
         try {
-            await views[viewName](viewContainer);
+            await views[viewName](viewContainer, params);
         } catch (error) {
             console.error(`Erro ao renderizar a tela "${viewName}":`, error);
             viewContainer.innerHTML = `
@@ -237,23 +150,43 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button id="retry-view-btn" class="btn-edit-profile" style="margin-top: 16px;">Tentar novamente</button>
                 </div>
             `;
-            viewContainer.querySelector('#retry-view-btn').addEventListener('click', () => navigateTo(viewName, true));
+            viewContainer.querySelector('#retry-view-btn').addEventListener('click', () => navigateTo(viewName, params, true));
         }
         window.scrollTo(0, 0);
     }
 
     function navigateBack() {
-        if (historyStack.length > 1) {
-            historyStack.pop();
-            const previousView = historyStack[historyStack.length - 1];
-            navigateTo(previousView, true);
+        if (window.history.length > 1) {
+            window.history.back();
         } else {
             navigateTo('home');
         }
     }
 
+    function parseHashAndNavigate() {
+        const rawHash = window.location.hash || '';
+        const hash = rawHash.replace(/^#\/?/, '');
+        if (!hash) {
+            navigateTo('home');
+            return;
+        }
+        const parts = hash.split('/');
+        const viewName = parts[0] || 'home';
+        const paramId = parts[1] || null;
+
+        if (viewName === 'profile' && paramId) {
+            navigateTo('profile', { userId: paramId });
+        } else {
+            navigateTo(viewName, paramId ? { id: paramId } : null);
+        }
+    }
+
     window.navigateTo = navigateTo;
     window.navigateBack = navigateBack;
+
+    window.addEventListener('popstate', () => {
+        parseHashAndNavigate();
+    });
 
     navItems.forEach(item => {
         item.addEventListener('click', () => {
@@ -274,5 +207,5 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    navigateTo('home');
+    parseHashAndNavigate();
 });

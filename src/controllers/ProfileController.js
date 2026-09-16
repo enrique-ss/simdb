@@ -34,6 +34,62 @@ class ProfileController {
     };
 
     /**
+     * Retorna o perfil de um usuário específico por ID com estatísticas e relacionamento
+     */
+    getProfileById = (req, res) => {
+        if (!isOfflineMode) return res.status(400).json({ error: "Servidor em modo Supabase." });
+        try {
+            const targetUserId = req.params.id;
+            const currentUserId = req.user.id;
+
+            const user = db.prepare('SELECT id, username, display_name, avatar_url, profile_cover_url, home_banner_url, bio, letterboxd_link, serializd_link, profile_theme, is_private, stats_private, media_filter, language_region, series_count, movies_count, games_count, works_count, created_at FROM profiles WHERE id = ?').get(targetUserId);
+
+            if (!user) return res.status(404).json({ error: "Perfil não encontrado." });
+
+            const seriesCount = db.prepare(`SELECT COUNT(DISTINCT media_id) as c FROM user_media_progress WHERE user_id = ? AND media_type = 'series'`).get(user.id).c;
+            const moviesCount = db.prepare(`SELECT COUNT(DISTINCT media_id) as c FROM user_media_progress WHERE user_id = ? AND media_type = 'movie'`).get(user.id).c;
+            const gamesCount = db.prepare(`SELECT COUNT(DISTINCT media_id) as c FROM user_media_progress WHERE user_id = ? AND media_type = 'game'`).get(user.id).c;
+            const booksCount = db.prepare(`SELECT COUNT(DISTINCT media_id) as c FROM user_media_progress WHERE user_id = ? AND media_type = 'book'`).get(user.id).c;
+
+            user.series_count = seriesCount;
+            user.movies_count = moviesCount;
+            user.games_count = gamesCount;
+            user.works_count = booksCount;
+
+            let relationshipStatus = 'none';
+            let relationshipId = null;
+
+            if (currentUserId !== targetUserId) {
+                const rel = db.prepare(`
+                    SELECT id, user_id, friend_id, status 
+                    FROM user_relationships 
+                    WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)
+                `).get(currentUserId, targetUserId, targetUserId, currentUserId);
+
+                if (rel) {
+                    relationshipId = rel.id;
+                    if (rel.status === 'accepted') {
+                        relationshipStatus = 'accepted';
+                    } else if (rel.user_id === currentUserId) {
+                        relationshipStatus = 'pending_sent';
+                    } else {
+                        relationshipStatus = 'pending_received';
+                    }
+                }
+            } else {
+                relationshipStatus = 'self';
+            }
+
+            user.relationshipStatus = relationshipStatus;
+            user.relationshipId = relationshipId;
+
+            res.json(user);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    };
+
+    /**
      * Atualiza o perfil do usuário autenticado
      */
     updateProfile = (req, res) => {

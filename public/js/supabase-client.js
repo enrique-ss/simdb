@@ -39,6 +39,8 @@ export async function getCurrentUserProfile() {
 
     const sb = await getSupabase();
     if (sb) {
+        const sessionUser = getSessionUser();
+        if (!sessionUser) return null;
         const { data } = await sb.from('profiles').select('*').eq('id', sessionUser.id).single();
         if (data) return data;
     }
@@ -112,12 +114,18 @@ export async function getUserProgress() {
 
     const sb = await getSupabase();
     if (sb) {
-        const { data } = await sb.from('user_media_progress').select('*').eq('user_id', sessionUser.id);
+        const sessionUser = getSessionUser();
+        if (!sessionUser) return [];
+        const { data, error } = await sb.from('user_media_progress')
+            .select('*')
+            .eq('user_id', sessionUser.id)
+            .order('last_updated', { ascending: false });
+        if (error) console.error('Erro ao carregar progresso:', error);
         if (data) return data;
     }
 
     try {
-        const res = await fetch('/api/progress', {
+        const res = await fetch('/api/media/progress', {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -131,7 +139,7 @@ export async function getUserProgress() {
 
 export async function advanceProgress(progressId) {
     try {
-        await fetch('/api/progress/advance', {
+        await fetch('/api/media/progress/advance', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ id: progressId })
@@ -213,7 +221,7 @@ export async function postReview(reviewData) {
     if (!token) return;
 
     try {
-        await fetch('/api/reviews', {
+        await fetch('/api/media/reviews', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -228,10 +236,40 @@ export async function postReview(reviewData) {
 
 export async function addMediaToProgress(mediaData) {
     const token = getToken();
-    if (!token) return;
+    if (!token) throw new Error('Sessão expirada. Entre novamente para adicionar uma mídia.');
+
+    const sb = await getSupabase();
+    if (sb) {
+        const sessionUser = getSessionUser();
+        if (!sessionUser) throw new Error('Sessão expirada. Entre novamente para adicionar uma mídia.');
+
+        const { data: existing, error: findError } = await sb.from('user_media_progress')
+            .select('id')
+            .eq('user_id', sessionUser.id)
+            .eq('media_id', mediaData.media_id)
+            .maybeSingle();
+        if (findError) throw findError;
+
+        const progress = {
+            user_id: sessionUser.id,
+            media_id: mediaData.media_id,
+            title: mediaData.title,
+            media_type: mediaData.media_type || 'series',
+            poster: mediaData.poster || '',
+            total_episodes: mediaData.total_episodes || 10,
+            total_chapters: mediaData.total_chapters || 100,
+            last_updated: new Date().toISOString()
+        };
+        const query = existing
+            ? sb.from('user_media_progress').update(progress).eq('id', existing.id)
+            : sb.from('user_media_progress').insert(progress);
+        const { error } = await query;
+        if (error) throw error;
+        return { success: true, id: existing?.id };
+    }
 
     try {
-        const res = await fetch('/api/progress/add', {
+        const res = await fetch('/api/media/progress/add', {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
@@ -239,9 +277,12 @@ export async function addMediaToProgress(mediaData) {
             },
             body: JSON.stringify(mediaData)
         });
-        return await res.json();
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Não foi possível adicionar a mídia ao Continuar.');
+        return data;
     } catch (err) {
         console.error("Erro ao adicionar mídia ao progresso:", err);
+        throw err;
     }
 }
 
@@ -265,5 +306,42 @@ export async function getApoieGoal() {
         return await res.json();
     } catch (err) {
         return { title: 'Lançar a versão para IOS', target_amount: 550.0, current_amount: 0.0, ads_watched_count: 0 };
+    }
+}
+
+
+export async function getProfileById(userId) {
+    const token = getToken();
+    if (!token || !userId) return null;
+
+    try {
+        const res = await fetch(`/api/profile/${userId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!res.ok) return null;
+        return await res.json();
+    } catch (err) {
+        console.error("Erro ao obter perfil por ID:", err);
+        return null;
+    }
+}
+
+export async function getAllUserSuggestions() {
+    const token = getToken();
+    if (!token) return [];
+
+    try {
+        const res = await fetch('/api/friends/suggestions', {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        if (!res.ok) return [];
+        return await res.json();
+    } catch (err) {
+        console.error("Erro ao obter sugestões de usuários:", err);
+        return [];
     }
 }

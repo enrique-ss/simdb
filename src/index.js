@@ -52,6 +52,8 @@ app.use('/api/auth', rotasAutenticacao);
 app.use('/api/profile', rotasPerfil);
 app.use('/api/friends', rotasAmizades);
 app.use('/api/media', rotasMidia);
+app.use('/api/progress', rotasMidia);
+app.use('/api/reviews', rotasMidia);
 app.use('/api/chat', rotasChat);
 app.use('/api/activities', rotasAtividades);
 app.use('/api/lists', rotasListas);
@@ -77,15 +79,18 @@ app.get('/api/health', (req, res) => {
     });
 });
 
-// Envia a página principal (index.html) quando acessamos o endereço base
-app.get('/', (req, res) => {
+// Envia a página principal (index.html) quando acessamos o endereço base ou rotas de navegação SPA
+app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+        return next();
+    }
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
-// Caso alguém tente acessar um caminho que não existe
-app.use((req, res) => {
+// Caso alguém tente acessar uma rota de API que não existe
+app.use('/api', (req, res) => {
     res.status(404).json({
-        error: 'Rota não encontrada',
+        error: 'Rota de API não encontrada',
         path: req.path
     });
 });

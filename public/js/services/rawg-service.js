@@ -25,7 +25,7 @@ export async function searchGames(query) {
                 external_id: "3498",
                 media_type: "game",
                 title: "The Witcher 3: Wild Hunt",
-                poster: "https://images.unsplash.com/photo-1538481199705-c710c4e965fc?w=500",
+                poster: "",
                 release_year: "2015",
                 overview: "RPG eletrônico de ação de mundo aberto.",
                 rating: "4.9"

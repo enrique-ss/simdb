@@ -74,6 +74,55 @@ class FriendsController {
     };
 
     /**
+     * Retorna todos os usuários cadastrados no banco para sugestões/comunidade
+     */
+    getSuggestions = (req, res) => {
+        if (!isOfflineMode) return res.status(400).json({ error: "Servidor em modo Supabase." });
+        try {
+            const currentUserId = req.user.id;
+
+            const users = db.prepare(`
+                SELECT id, username, display_name, avatar_url, bio
+                FROM profiles
+                WHERE id != ? AND is_banned = 0
+                ORDER BY created_at DESC
+            `).all(currentUserId);
+
+            const usersWithRelationship = users.map(u => {
+                const rel = db.prepare(`
+                    SELECT id, user_id, friend_id, status
+                    FROM user_relationships
+                    WHERE (user_id = ? AND friend_id = ?) OR (user_id = ? AND friend_id = ?)
+                `).get(currentUserId, u.id, u.id, currentUserId);
+
+                let relationshipStatus = 'none';
+                let relationshipId = null;
+
+                if (rel) {
+                    relationshipId = rel.id;
+                    if (rel.status === 'accepted') {
+                        relationshipStatus = 'accepted';
+                    } else if (rel.user_id === currentUserId) {
+                        relationshipStatus = 'pending_sent';
+                    } else {
+                        relationshipStatus = 'pending_received';
+                    }
+                }
+
+                return {
+                    ...u,
+                    relationshipStatus,
+                    relationshipId
+                };
+            });
+
+            res.json(usersWithRelationship);
+        } catch (err) {
+            res.status(500).json({ error: err.message });
+        }
+    };
+
+    /**
      * Envia solicitação de amizade
      */
     sendRequest = (req, res) => {

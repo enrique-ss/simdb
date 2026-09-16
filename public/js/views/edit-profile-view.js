@@ -6,43 +6,43 @@ export async function renderEditProfileView(container) {
 
     container.innerHTML = `
         <div class="section">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                <button id="back-to-profile-btn" style="background: none; border: none; color: white; font-size: 1.4rem; cursor: pointer;">←</button>
-                <h3 style="font-weight: 800; font-size: 1.2rem; color: white;">Editar Perfil</h3>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 18px;">
+                <button id="back-to-profile-btn" style="background: none; border: none; color: white; font-size: 1.3rem; cursor: pointer;">←</button>
+                <h3 style="font-weight: 800; font-size: 0.94rem; color: white;">Editar Perfil</h3>
             </div>
 
-            <div style="background: var(--bg-card); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
-                <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="background: var(--bg-card); padding: 14px; border-radius: 4px; border: 1px solid var(--border-color);">
+                <div style="display: flex; flex-direction: column; gap: 12px;">
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Nome Exibido:</label>
+                        <label style="font-size: 0.69rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Nome exibido</label>
                         <input type="text" id="edit-name" class="search-pill-input" value="${user.display_name || ''}" placeholder="Seu nome exibido">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Biografia:</label>
-                        <textarea id="edit-bio" class="search-pill-input" rows="3" style="border-radius: var(--radius-md);" placeholder="Fale um pouco sobre você...">${user.bio || ''}</textarea>
+                        <label style="font-size: 0.69rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Biografia</label>
+                        <textarea id="edit-bio" class="search-pill-input" rows="3" style="border-radius: 4px;" placeholder="Fale um pouco sobre você...">${user.bio || ''}</textarea>
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">URL da Foto de Perfil (Avatar):</label>
+                        <label style="font-size: 0.69rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">URL da foto de perfil (avatar)</label>
                         <input type="text" id="edit-avatar" class="search-pill-input" value="${user.avatar_url || ''}" placeholder="https://exemplo.com/minha-foto.jpg">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">URL da Foto de Capa (Perfil):</label>
+                        <label style="font-size: 0.69rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">URL da foto de capa (perfil)</label>
                         <input type="text" id="edit-cover" class="search-pill-input" value="${user.profile_cover_url || ''}" placeholder="https://exemplo.com/minha-capa.jpg">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">URL do Banner da Página Inicial:</label>
+                        <label style="font-size: 0.69rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">URL do banner da página inicial</label>
                         <input type="text" id="edit-home-banner" class="search-pill-input" value="${user.home_banner_url || ''}" placeholder="https://exemplo.com/meu-banner.jpg">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Link Letterboxd:</label>
+                        <label style="font-size: 0.69rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Link Letterboxd</label>
                         <input type="text" id="edit-letterboxd" class="search-pill-input" value="${user.letterboxd_link || ''}" placeholder="letterboxd.com/seu_usuario">
                     </div>
                     <div>
-                        <label style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Link Serializd:</label>
+                        <label style="font-size: 0.69rem; color: var(--text-secondary); display: block; margin-bottom: 4px;">Link Serializd</label>
                         <input type="text" id="edit-serializd" class="search-pill-input" value="${user.serializd_link || ''}" placeholder="serializd.com/seu_usuario">
                     </div>
 
-                    <button class="btn-edit-profile" id="save-profile-btn" style="width: 100%; margin-top: 10px; padding: 12px; font-size: 0.9rem;">
+                    <button class="btn-edit-profile" id="save-profile-btn" style="width: 100%; margin-top: 8px; padding: 10px; font-size: 0.69rem;">
                         Salvar alterações
                     </button>
                 </div>

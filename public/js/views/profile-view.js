@@ -1,10 +1,28 @@
-import { getCurrentUserProfile, updateUserProfile, getMediaByTag } from '../supabase-client.js';
+import { getCurrentUserProfile, getProfileById, updateUserProfile, getMediaByTag, sendFriendRequest, getToken } from '../supabase-client.js';
 
-export async function renderProfileView(container) {
-    const user = await getCurrentUserProfile();
-    if (!user) return;
+export async function renderProfileView(container, options = null) {
+    const currentUser = await getCurrentUserProfile();
+    if (!currentUser) return;
 
-    const favoritos = await getMediaByTag('favoritos');
+    let targetUserId = null;
+    if (options && typeof options === 'object' && options.userId) {
+        targetUserId = options.userId;
+    } else if (typeof options === 'string') {
+        targetUserId = options;
+    }
+
+    let user = currentUser;
+    let isSelf = true;
+
+    if (targetUserId && targetUserId !== currentUser.id) {
+        const targetData = await getProfileById(targetUserId);
+        if (targetData) {
+            user = targetData;
+            isSelf = false;
+        }
+    }
+
+    const favoritos = await getMediaByTag('favoritos', user.id);
     const userInitial = (user.display_name || user.username || 'U')[0].toUpperCase();
 
     const coverHtml = user.profile_cover_url 
@@ -15,19 +33,35 @@ export async function renderProfileView(container) {
         ? `<img src="${user.avatar_url}" class="profile-avatar-floating">` 
         : `<div class="profile-avatar-floating" style="background: var(--accent-purple); color: white; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 800;">${userInitial}</div>`;
 
+    let actionBtnHtml = '';
+    if (isSelf) {
+        actionBtnHtml = `<button class="btn-edit-profile" id="edit-profile-trigger-btn">Editar Perfil</button>`;
+    } else {
+        const relStatus = user.relationshipStatus || 'none';
+        if (relStatus === 'accepted') {
+            actionBtnHtml = `<button class="btn-edit-profile" id="friend-status-btn" style="background: #242430; border: 1px solid #38384A; color: #E2D5FC;">Amigos ✓</button>`;
+        } else if (relStatus === 'pending_sent') {
+            actionBtnHtml = `<button class="btn-edit-profile" id="friend-status-btn" disabled style="opacity: 0.7;">Solicitação Enviada</button>`;
+        } else if (relStatus === 'pending_received') {
+            actionBtnHtml = `<button class="btn-edit-profile" id="accept-friend-btn" style="background: var(--accent-purple); color: white;">Aceitar Amizade</button>`;
+        } else {
+            actionBtnHtml = `<button class="btn-edit-profile" id="add-friend-btn" style="background: var(--accent-purple); color: white;">+ Adicionar Amigo</button>`;
+        }
+    }
+
     container.innerHTML = `
         <div class="profile-container">
-            <!-- 1. Cover Header (Sem Placeholders Fictícios) -->
+            <!-- Header do Perfil -->
             <div class="profile-cover-box">
                 ${coverHtml}
-                <div id="profile-dots-menu-btn" style="position: absolute; top: 14px; right: 16px; color: white; font-size: 1.3rem; cursor: pointer; padding: 6px; z-index: 10;">•••</div>
+                ${isSelf ? `<div id="profile-dots-menu-btn" style="position: absolute; top: 14px; right: 16px; color: white; font-size: 1.3rem; cursor: pointer; padding: 6px; z-index: 10;">•••</div>` : ''}
                 ${avatarHtml}
             </div>
 
             <!-- Informações do Usuário & Ações -->
             <div class="profile-info-header">
                 <div class="profile-actions-row">
-                    <button class="btn-edit-profile" id="edit-profile-trigger-btn">Editar Perfil</button>
+                    ${actionBtnHtml}
                 </div>
 
                 <div>
@@ -81,7 +115,7 @@ export async function renderProfileView(container) {
                     <div class="section-header" style="margin-bottom: 8px;">
                         <h3 class="section-title">Hall da Fama</h3>
                     </div>
-                    <div style="position: relative; width: 100%; height: 110px; border-radius: var(--radius-md); overflow: hidden; background: #1B1824; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                    <div style="position: relative; width: 100%; height: 110px; border-radius: var(--radius-md); overflow: hidden; background: linear-gradient(135deg, rgba(255, 221, 243, 0.12), rgba(29, 27, 46, 0.15)); backdrop-filter: blur(10px); cursor: pointer; display: flex; align-items: center; justify-content: center;">
                         <span style="color: var(--text-muted); font-size: 0.85rem;">Ver Personagens e Ships Favoritos</span>
                         <div style="position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: white; font-size: 1.3rem;">›</div>
                     </div>
@@ -91,7 +125,7 @@ export async function renderProfileView(container) {
                 <div style="margin-top: 20px;">
                     <div class="section-header">
                         <h3 class="section-title">Favoritos</h3>
-                        <span class="see-more-btn">Ver mais</span>
+                        <span class="see-more-btn" id="see-more-favoritos">Ver mais</span>
                     </div>
                     <div class="horizontal-scroll">
                         ${favoritos.length > 0 ? favoritos.map(item => `
@@ -103,10 +137,47 @@ export async function renderProfileView(container) {
         </div>
     `;
 
-    const editTrigger = container.querySelector('#edit-profile-trigger-btn');
-    editTrigger.addEventListener('click', () => {
-        window.navigateTo('edit-profile');
-    });
+    if (isSelf) {
+        const editTrigger = container.querySelector('#edit-profile-trigger-btn');
+        if (editTrigger) editTrigger.addEventListener('click', () => window.navigateTo('edit-profile'));
+    } else {
+        const addFriendBtn = container.querySelector('#add-friend-btn');
+        if (addFriendBtn) {
+            addFriendBtn.addEventListener('click', async () => {
+                try {
+                    addFriendBtn.disabled = true;
+                    addFriendBtn.textContent = 'Enviando...';
+                    await sendFriendRequest(user.id);
+                    addFriendBtn.textContent = 'Solicitação Enviada';
+                } catch (err) {
+                    alert(err.message);
+                    addFriendBtn.disabled = false;
+                    addFriendBtn.textContent = '+ Adicionar Amigo';
+                }
+            });
+        }
+
+        const acceptFriendBtn = container.querySelector('#accept-friend-btn');
+        if (acceptFriendBtn && user.relationshipId) {
+            acceptFriendBtn.addEventListener('click', async () => {
+                try {
+                    acceptFriendBtn.disabled = true;
+                    const token = getToken();
+                    await fetch('/api/friends/accept', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ relationship_id: user.relationshipId })
+                    });
+                    renderProfileView(container, { userId: user.id });
+                } catch (err) {
+                    alert('Erro ao aceitar solicitação.');
+                }
+            });
+        }
+    }
 
     const statsBtn = container.querySelector('#stats-card-trigger-btn');
     if (statsBtn) statsBtn.addEventListener('click', () => window.navigateTo('estatisticas'));
@@ -124,7 +195,10 @@ export async function renderProfileView(container) {
     container.querySelectorAll('.prof-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const target = btn.dataset.tab;
-            if (target) window.navigateTo(target);
+            if (target) window.navigateTo(target, { userId: user.id });
         });
     });
+
+    const seeMoreFavoritos = container.querySelector('#see-more-favoritos');
+    if (seeMoreFavoritos) seeMoreFavoritos.addEventListener('click', () => window.navigateTo('favoritos'));
 }

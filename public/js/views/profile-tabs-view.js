@@ -1,6 +1,6 @@
 import { getCurrentUserProfile, getUserProgress, getUserLists, getMediaReviews, getToken } from '../supabase-client.js';
 
-export async function renderProfileTab(container, tabName = 'feed') {
+export async function renderProfileTab(container, tabName = 'feed', options = null) {
     const user = await getCurrentUserProfile();
     if (!user) return;
 
@@ -18,16 +18,29 @@ export async function renderProfileTab(container, tabName = 'feed') {
         tabContent = `
             <div class="section">
                 <h4 style="color: var(--text-primary); margin-bottom: 12px; font-weight:700;">Feed de Atividades</h4>
-                ${progressList.length > 0 ? progressList.map(item => `
-                    <div style="background: var(--bg-card); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 10px; display: flex; gap: 12px; align-items: center;">
-                        <img src="${item.poster || 'https://via.placeholder.com/300x450?text=Capa'}" style="width: 48px; height: 72px; object-fit: cover; border-radius: 6px;">
-                        <div>
-                            <div style="font-size: 0.85rem; font-weight: 700; color: white;">${item.title}</div>
-                            <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;">Progresso atualizado recentemente</div>
-                            <div style="font-size: 0.75rem; color: var(--accent-purple); font-weight: 700; margin-top: 4px;">Status: Em andamento</div>
+                ${progressList.length > 0 ? progressList.map(item => {
+                    let progText = item.progress_text;
+                    if (!progText) {
+                        if (item.media_type === 'series') {
+                            progText = `Temporada ${item.current_season || 1} • Episódio ${item.current_episode || 1}`;
+                        } else if (item.media_type === 'book') {
+                            progText = `Capítulo ${item.current_chapter || 1}`;
+                        } else {
+                            progText = 'Progresso atualizado';
+                        }
+                    }
+
+                    return `
+                        <div style="background: var(--bg-card); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 10px; display: flex; gap: 12px; align-items: center;">
+                            <img src="${item.poster || 'https://via.placeholder.com/300x450?text=Capa'}" style="width: 48px; height: 72px; object-fit: cover; border-radius: 6px;">
+                            <div>
+                                <div style="font-size: 0.85rem; font-weight: 700; color: white;">${item.title}</div>
+                                <div style="font-size: 0.78rem; color: #E2D5FC; margin-top: 2px;">${progText}</div>
+                                <div style="font-size: 0.75rem; color: var(--accent-purple); font-weight: 700; margin-top: 4px;">Status: Em andamento</div>
+                            </div>
                         </div>
-                    </div>
-                `).join('') : `
+                    `;
+                }).join('') : `
                     <div style="text-align: center; color: var(--text-muted); padding: 40px 0; font-size: 0.88rem;">
                         Nenhuma atividade recente no feed.
                     </div>
@@ -46,21 +59,14 @@ export async function renderProfileTab(container, tabName = 'feed') {
         tabContent = `
             <div class="section">
                 <div style="display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px;">
-                    <button class="category-card-btn lib-sub-tab active" data-sub="all" style="padding: 6px 12px; font-size: 0.8rem;">Todas</button>
+                    <button class="category-card-btn lib-sub-tab active" data-sub="all" style="padding: 6px 12px; font-size: 0.8rem; border: 1px solid var(--accent-purple);">Todas</button>
                     <button class="category-card-btn lib-sub-tab" data-sub="series" style="padding: 6px 12px; font-size: 0.8rem;">Séries</button>
                     <button class="category-card-btn lib-sub-tab" data-sub="movie" style="padding: 6px 12px; font-size: 0.8rem;">Filmes</button>
                     <button class="category-card-btn lib-sub-tab" data-sub="game" style="padding: 6px 12px; font-size: 0.8rem;">Jogos</button>
                     <button class="category-card-btn lib-sub-tab" data-sub="book" style="padding: 6px 12px; font-size: 0.8rem;">Leitura</button>
                 </div>
                 <div id="lib-items-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
-                    ${progressList.length > 0 ? progressList.map(item => `
-                        <div class="poster-card">
-                            <div class="poster-img-wrapper">
-                                <img src="${item.poster || 'https://via.placeholder.com/300x450?text=Capa'}" class="poster-img">
-                            </div>
-                            <div class="poster-footer-pill">${item.title}</div>
-                        </div>
-                    `).join('') : '<div style="grid-column: 1 / -1; color: var(--text-muted); text-align: center; padding: 40px 0;">Sua biblioteca está vazia.</div>'}
+                    <!-- Preenchido via renderGrid() -->
                 </div>
             </div>
         `;
@@ -72,7 +78,7 @@ export async function renderProfileTab(container, tabName = 'feed') {
                     <div style="background: var(--bg-card); padding: 12px; border-radius: var(--radius-md); border: 1px solid var(--border-color); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="font-weight: 700; color: white; font-size: 0.9rem;">${item.title}</div>
-                            <div style="font-size: 0.78rem; color: var(--text-secondary);">${new Date().toLocaleDateString('pt-BR')}</div>
+                            <div style="font-size: 0.78rem; color: #E2D5FC;">${item.progress_text || 'Em andamento'}</div>
                         </div>
                         <div style="font-size: 0.8rem; background: rgba(142, 91, 238, 0.2); color: var(--accent-purple); padding: 4px 10px; border-radius: 20px; font-weight: 700;">Registrado</div>
                     </div>
@@ -116,6 +122,45 @@ export async function renderProfileTab(container, tabName = 'feed') {
             ${tabContent}
         </div>
     `;
+
+    if (tabName === 'biblioteca') {
+        const gridEl = container.querySelector('#lib-items-grid');
+        const subBtns = container.querySelectorAll('.lib-sub-tab');
+
+        function renderGrid(filterType = 'all') {
+            const filtered = filterType === 'all' 
+                ? progressList 
+                : progressList.filter(item => item.media_type === filterType);
+
+            if (filtered.length === 0) {
+                gridEl.innerHTML = '<div style="grid-column: 1 / -1; color: var(--text-muted); text-align: center; padding: 40px 0;">Nenhuma mídia nesta categoria.</div>';
+                return;
+            }
+
+            gridEl.innerHTML = filtered.map(item => `
+                <div class="poster-card">
+                    <div class="poster-img-wrapper">
+                        <img src="${item.poster || 'https://via.placeholder.com/300x450?text=Capa'}" class="poster-img">
+                    </div>
+                    <div class="poster-footer-pill">${item.progress_text || item.title}</div>
+                </div>
+            `).join('');
+        }
+
+        renderGrid('all');
+
+        subBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                subBtns.forEach(b => {
+                    b.classList.remove('active');
+                    b.style.borderColor = 'transparent';
+                });
+                btn.classList.add('active');
+                btn.style.borderColor = 'var(--accent-purple)';
+                renderGrid(btn.dataset.sub);
+            });
+        });
+    }
 
     const backBtn = container.querySelector('#back-to-profile-btn');
     if (backBtn) {

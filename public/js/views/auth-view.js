@@ -4,114 +4,99 @@ export function renderAuthView(container, initialScreen = 'login') {
     function renderScreen() {
         if (currentScreen === 'register') {
             container.innerHTML = `
-                <div class="section" style="min-height: 90vh; display: flex; flex-direction: column; justify-content: center; padding: 24px;">
+                <div class="section" style="min-height: 90vh; display: flex; flex-direction: column; justify-content: center; padding: 32px 20px;">
                     <!-- Logo KINDRED (Figma exact match Cadastro.pdf) -->
-                    <div style="text-align: center; margin-bottom: 28px;">
-                        <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 3.2rem; font-weight: 900; letter-spacing: -1px; color: #E5D4ED; text-transform: uppercase;">KINDRED</h1>
+                    <div style="text-align: center; margin-bottom: 32px;">
+                        <h1 style="font-family: var(--font-display); font-size: 2.8rem; font-weight: 900; letter-spacing: -1px; color: #E5D4ED; text-transform: uppercase;">KINDRED</h1>
                     </div>
 
                     <!-- Formulário de Cadastro -->
-                    <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="display: flex; flex-direction: column; gap: 16px; max-width: 320px; margin: 0 auto; width: 100%;">
                         <div>
-                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
-                                NOME DE EXIBIÇÃO
+                            <label style="font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                                Nome de exibição
                             </label>
-                            <div style="position: relative;">
-                                <input type="text" id="reg-display-name" class="search-pill-input" placeholder="Nome de exibição">
-                            </div>
+                            <input type="text" id="reg-display-name" class="search-pill-input" placeholder="Nome de exibição" style="padding: 12px 16px;">
                         </div>
 
                         <div>
-                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
-                                NOME DE USUÁRIO (@HANDLE)
+                            <label style="font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                                Nome de usuário (@handle)
                             </label>
-                            <div style="position: relative;">
-                                <input type="text" id="reg-username" class="search-pill-input" placeholder="@usuário">
-                            </div>
+                            <input type="text" id="reg-username" class="search-pill-input" placeholder="@usuário" style="padding: 12px 16px;">
                         </div>
 
                         <div>
-                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
-                                E-MAIL
+                            <label style="font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                                E-mail
                             </label>
-                            <div style="position: relative;">
-                                <input type="email" id="reg-email" class="search-pill-input" placeholder="nome@exemplo.com">
-                            </div>
+                            <input type="email" id="reg-email" class="search-pill-input" placeholder="nome@exemplo.com" style="padding: 12px 16px;">
                         </div>
 
                         <div>
-                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
-                                SENHA
+                            <label style="font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                                Senha
                             </label>
-                            <div style="position: relative;">
-                                <input type="password" id="reg-password" class="search-pill-input" placeholder="Senha">
-                            </div>
-                            <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; display: block;">Senha deve conter no mínimo 8 caracteres</span>
+                            <input type="password" id="reg-password" class="search-pill-input" placeholder="Senha" style="padding: 12px 16px;">
+                            <span style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px; display: block;">Mínimo 8 caracteres</span>
                         </div>
 
                         <div>
-                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
-                                CONFIRMAR SENHA
+                            <label style="font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                                Confirmar senha
                             </label>
-                            <div style="position: relative;">
-                                <input type="password" id="reg-password-confirm" class="search-pill-input" placeholder="Confirme sua senha">
-                            </div>
-                            <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; display: block;">Digite sua senha para confirmar</span>
+                            <input type="password" id="reg-password-confirm" class="search-pill-input" placeholder="Confirme sua senha" style="padding: 12px 16px;">
                         </div>
 
-                        <div id="auth-error-msg" style="color: var(--heart-red); font-size: 0.8rem; text-align: center; display: none;"></div>
+                        <div id="auth-error-msg" style="color: var(--heart-red); font-size: 0.75rem; text-align: center; display: none;"></div>
 
-                        <button id="register-btn" style="background: linear-gradient(135deg, #5C5468, #3A3543); color: white; border: none; padding: 14px; border-radius: var(--radius-md); font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px;">
+                        <button id="register-btn" style="background: linear-gradient(135deg, #5C5468, #3A3543); color: white; border: none; padding: 12px; border-radius: var(--radius-md); font-weight: 600; font-size: 0.9rem; cursor: pointer; margin-top: 8px;">
                             Criar conta
                         </button>
 
-                        <div style="text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 16px;">
-                            Já tem uma conta? <span id="switch-to-login" style="color: #F2C7E5; font-weight: 700; cursor: pointer;">Entrar</span>
+                        <div style="text-align: center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 12px;">
+                            Já tem uma conta? <span id="switch-to-login" style="color: #F2C7E5; font-weight: 600; cursor: pointer;">Entrar</span>
                         </div>
                     </div>
                 </div>
             `;
         } else {
             container.innerHTML = `
-                <div class="section" style="min-height: 90vh; display: flex; flex-direction: column; justify-content: center; padding: 24px;">
+                <div class="section" style="min-height: 90vh; display: flex; flex-direction: column; justify-content: center; padding: 32px 20px;">
                     <!-- Logo KINDRED -->
-                    <div style="text-align: center; margin-bottom: 24px;">
-                        <h1 style="font-family: 'Playfair Display', Georgia, serif; font-size: 3.2rem; font-weight: 900; letter-spacing: -1px; color: #E5D4ED; text-transform: uppercase;">KINDRED</h1>
-                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 6px;">Catalogue, descubra e compartilhe suas mídias favoritas.</p>
+                    <div style="text-align: center; margin-bottom: 28px;">
+                        <h1 style="font-family: var(--font-display); font-size: 2.8rem; font-weight: 900; letter-spacing: -1px; color: #E5D4ED; text-transform: uppercase;">KINDRED</h1>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 8px;">Catalogue, descubra e compartilhe suas mídias favoritas.</p>
                     </div>
 
                     <!-- Formulário de Login -->
-                    <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="display: flex; flex-direction: column; gap: 16px; max-width: 320px; margin: 0 auto; width: 100%;">
                         <div>
-                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
-                                E-MAIL OU USUÁRIO (@HANDLE)
+                            <label style="font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                                E-mail ou usuário (@handle)
                             </label>
-                            <div style="position: relative;">
-                                <input type="text" id="login-identifier" class="search-pill-input" placeholder="E-mail ou @usuário">
-                            </div>
+                            <input type="text" id="login-identifier" class="search-pill-input" placeholder="E-mail ou @usuário" style="padding: 12px 16px;">
                         </div>
 
                         <div>
-                            <label style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
-                                SENHA
+                            <label style="font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+                                Senha
                             </label>
-                            <div style="position: relative;">
-                                <input type="password" id="login-password" class="search-pill-input" placeholder="Senha">
-                            </div>
+                            <input type="password" id="login-password" class="search-pill-input" placeholder="Senha" style="padding: 12px 16px;">
                         </div>
 
-                        <div id="auth-error-msg" style="color: var(--heart-red); font-size: 0.8rem; text-align: center; display: none;"></div>
+                        <div id="auth-error-msg" style="color: var(--heart-red); font-size: 0.75rem; text-align: center; display: none;"></div>
 
-                        <button id="login-btn" style="background: linear-gradient(135deg, #5C5468, #3A3543); color: white; border: none; padding: 14px; border-radius: var(--radius-md); font-weight: 700; font-size: 1rem; cursor: pointer; margin-top: 10px;">
+                        <button id="login-btn" style="background: linear-gradient(135deg, #5C5468, #3A3543); color: white; border: none; padding: 12px; border-radius: var(--radius-md); font-weight: 600; font-size: 0.9rem; cursor: pointer; margin-top: 8px;">
                             Entrar
                         </button>
 
-                        <button id="google-login-btn" style="background: #22222E; color: white; border: 1px solid var(--border-color); padding: 12px; border-radius: var(--radius-md); font-weight: 600; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <button id="google-login-btn" style="background: #22222E; color: white; border: 1px solid var(--border-color); padding: 11px; border-radius: var(--radius-md); font-weight: 500; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
                             Continuar com Google
                         </button>
 
-                        <div style="text-align: center; font-size: 0.85rem; color: var(--text-secondary); margin-top: 12px;">
-                            Ainda não tem uma conta? <span id="switch-to-reg" style="color: #F2C7E5; font-weight: 700; cursor: pointer;">Criar conta</span>
+                        <div style="text-align: center; font-size: 0.8rem; color: var(--text-secondary); margin-top: 12px;">
+                            Ainda não tem uma conta? <span id="switch-to-reg" style="color: #F2C7E5; font-weight: 600; cursor: pointer;">Criar conta</span>
                         </div>
                     </div>
                 </div>
